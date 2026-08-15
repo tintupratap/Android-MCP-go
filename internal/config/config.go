@@ -10,17 +10,26 @@ import (
 	"github.com/tintupratap/Android-MCP-go/internal/logging"
 )
 
+type PlatformToolsConfig struct {
+	Managed     bool      `json:"managed"`
+	Path        string    `json:"path,omitempty"`
+	Version     string    `json:"version,omitempty"`
+	Source      string    `json:"source,omitempty"`
+	InstalledAt time.Time `json:"installed_at,omitempty"`
+}
+
 // Config represents persistent device state in ~/.android-mcp/android-mcp.json
 type Config struct {
-	LastIP                   string    `json:"last_ip,omitempty"`
-	DeviceSerial             string    `json:"device_serial,omitempty"`
-	DeviceModel              string    `json:"device_model,omitempty"`
-	Port                     int       `json:"port,omitempty"`
-	Connection               string    `json:"connection,omitempty"` // "auto", "usb", "wifi"
-	LastSeen                 time.Time `json:"last_seen,omitempty"`
-	LastSuccessfulConnection time.Time `json:"last_successful_connection,omitempty"`
-	WiFiEnabled              bool      `json:"wifi_enabled"`
-	UBSSBootstrapEnabled     bool      `json:"usb_bootstrap_enabled"`
+	LastIP                   string               `json:"last_ip,omitempty"`
+	DeviceSerial             string               `json:"device_serial,omitempty"`
+	DeviceModel              string               `json:"device_model,omitempty"`
+	Port                     int                  `json:"port,omitempty"`
+	Connection               string               `json:"connection,omitempty"` // "auto", "usb", "wifi"
+	LastSeen                 time.Time            `json:"last_seen,omitempty"`
+	LastSuccessfulConnection time.Time            `json:"last_successful_connection,omitempty"`
+	WiFiEnabled              bool                 `json:"wifi_enabled"`
+	UBSSBootstrapEnabled     bool                 `json:"usb_bootstrap_enabled"`
+	PlatformTools            *PlatformToolsConfig `json:"platform_tools,omitempty"`
 }
 
 // ScrcpyConfig represents external state from ~/.scrcpy/scrcpy.json

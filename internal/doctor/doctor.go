@@ -10,29 +10,33 @@ import (
 	"github.com/tintupratap/Android-MCP-go/internal/adb"
 	"github.com/tintupratap/Android-MCP-go/internal/config"
 	"github.com/tintupratap/Android-MCP-go/internal/device"
+	"github.com/tintupratap/Android-MCP-go/internal/platformtools"
 )
 
 type DoctorReport struct {
-	ADBPath          string
-	ADBVersion       string
-	ADBServerRunning bool
-	MCPConfigPath    string
-	MCPConfigStatus  string
-	ScrcpyConfigPath string
-	ScrcpyStatus     string
-	USBDevices       []string
-	WiFiDevices      []string
-	SelectedDevice   *device.Device
-	DeviceModel      string
-	DeviceSerial     string
-	Endpoint         string
-	TerminalNotifier bool
-	NotifySend       bool
-	ToolCount        int
-	IsHealthy        bool
+	ADBPath           string
+	ADBVersion        string
+	ADBServerRunning  bool
+	PlatformToolsPath string
+	PTManaged         bool
+	PTSource          string
+	MCPConfigPath     string
+	MCPConfigStatus   string
+	ScrcpyConfigPath  string
+	ScrcpyStatus      string
+	USBDevices        []string
+	WiFiDevices       []string
+	SelectedDevice    *device.Device
+	DeviceModel       string
+	DeviceSerial      string
+	Endpoint          string
+	TerminalNotifier  bool
+	NotifySend        bool
+	ToolCount         int
+	IsHealthy         bool
 }
 
-func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client) *DoctorReport {
+func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client, ptMgr *platformtools.DefaultManager) *DoctorReport {
 	if client == nil {
 		client = adb.NewClient("")
 	}
@@ -41,6 +45,13 @@ func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client)
 		ADBPath:   client.ADBPath(),
 		IsHealthy: true,
 		ToolCount: 23,
+	}
+
+	if ptMgr != nil {
+		rep.PlatformToolsPath = ptMgr.Path()
+		rep.PTManaged = ptMgr.IsInstalled()
+		url, _ := platformtools.ResolveOfficialURL("darwin")
+		rep.PTSource = url
 	}
 
 	// 1. ADB Version & Server Check
@@ -126,13 +137,24 @@ func (r *DoctorReport) Format() string {
 	sb.WriteString("=====================\n\n")
 
 	sb.WriteString("ADB:\n")
-	sb.WriteString(fmt.Sprintf("  Binary: %s\n", r.ADBPath))
+	sb.WriteString(fmt.Sprintf("  Binary:  %s\n", r.ADBPath))
 	sb.WriteString(fmt.Sprintf("  Version: %s\n", r.ADBVersion))
 	serverState := "running"
 	if !r.ADBServerRunning {
 		serverState = "NOT running"
 	}
-	sb.WriteString(fmt.Sprintf("  Server: %s\n\n", serverState))
+	sb.WriteString(fmt.Sprintf("  Server:  %s\n\n", serverState))
+
+	sb.WriteString("Platform-Tools:\n")
+	managedStr := "no"
+	if r.PTManaged {
+		managedStr = "yes (installed)"
+	}
+	sb.WriteString(fmt.Sprintf("  Managed: %s\n", managedStr))
+	if r.PlatformToolsPath != "" {
+		sb.WriteString(fmt.Sprintf("  Path:    %s\n", r.PlatformToolsPath))
+	}
+	sb.WriteString("  Source:  Official Android/Google\n\n")
 
 	sb.WriteString("Configuration:\n")
 	sb.WriteString(fmt.Sprintf("  android-mcp.json: %s (%s)\n", r.MCPConfigStatus, r.MCPConfigPath))

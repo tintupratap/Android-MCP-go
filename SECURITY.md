@@ -12,7 +12,17 @@
 
 ---
 
-## 2. Command Execution & Injection Prevention
+## 2. Official Download Source & Platform-Tools Integrity
+
+`Android-MCP-go` automatically manages its Android SDK Platform-Tools under `~/.android-mcp/platform-tools/`.
+
+- **Download Policy**: Downloads originate exclusively from official Google HTTPS endpoints (`https://dl.google.com/android/repository/platform-tools-latest-*.zip`).
+- **Zip Slip Protection**: Zip entry paths are strictly validated before extraction to guarantee entries cannot traverse outside extraction target directories.
+- **Atomic Replacement**: Packages extract to temporary directories (`platform-tools.download/`), verify ADB execution (`adb version`), and swap atomically into place—preventing partial or corrupted tool installations.
+
+---
+
+## 3. Command Execution & Injection Prevention
 
 ### Strict Isolation Rule
 `Android-MCP-go` NEVER invokes `sh -c` or shell string concatenation to execute ADB or system commands.

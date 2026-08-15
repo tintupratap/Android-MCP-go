@@ -1,29 +1,37 @@
 # Android-MCP-go Changelog
 
+## [0.3.0] - 2026-08-15
+
+### Added
+- **Self-Contained Platform-Tools Management (`internal/platformtools`)**:
+  - Automatically manages ADB and fastboot under `~/.android-mcp/platform-tools/`.
+  - Downloads exclusively from official Google HTTPS endpoints (`dl.google.com/android/repository/platform-tools-latest-*.zip`).
+  - Implements Zip Slip security validation during extraction.
+  - Performs atomic directory replacement via `platform-tools.download/`.
+  - CLI management commands: `android-mcp platform-tools status|update|reinstall`.
+- **Debug Activity Notification System (`--debug`)**:
+  - Real-time desktop activity notifications for AI actions when `--debug` is active (e.g., `AI: Clicked "Login"`, `AI: Launched com.example.app`).
+  - Rate-limited async notification queue (`ANDROID_MCP_DEBUG_NOTIFY_INTERVAL`, default 250ms) to prevent notification spam.
+  - Automatic redaction of sensitive parameters (passwords, tokens, secrets).
+  - Action correlation IDs (`ACTION 8f4c2d`) linking desktop alerts to structured debug logs.
+- **Documentation**:
+  - `docs/PLATFORM_TOOLS.md`: Detailed platform-tools architecture and security model.
+  - `docs/NOTIFICATIONS.md`: Desktop notification hierarchy and debug activity system.
+
+---
+
 ## [0.2.0] - 2026-08-15
 
 ### Added
 - **Skills System & Manifest**:
-  - `SKILLS.md`: Comprehensive capability map detailing status, arguments, and requirements for all Android-MCP skills.
+  - `SKILLS.md`: Comprehensive capability map detailing status, arguments, and requirements.
   - `skills/`: Machine-readable capability domain manifests (`manifest.json`, `device.json`, `ui.json`, `screenshot.json`, `input.json`, `applications.json`, `filesystem.json`, `shell.json`, `automation.json`).
 - **Service Layer Architecture (`internal/service`)**:
   - Clean separation: `Android Capability -> Go Service -> MCP Adapter -> MCP Tool`.
-  - `DeviceService`, `InputService`, `ScreenService`, `UIService`, `AppService`, `FileService`, `ShellService`.
 - **System Engineering & Health Diagnostics**:
-  - `android-mcp doctor`: Detailed diagnostic CLI report checking ADB version, server status, configuration files, device connections, notification backends, and MCP tool count.
-  - `android-mcp status`: Concise 5-line status report with exit codes (0 for healthy/ready, 1 for disconnected/error).
-- **Expanded MCP Capabilities & Tools**:
-  - `list_apps`: List installed application packages with third-party filtering.
-  - `launch_app`: Launch application package on device via `monkey`/`am start`.
-  - `stop_app`: Force-stop application package via `am force-stop`.
-  - `file_push`: Transfer host file to Android storage.
-  - `file_pull`: Transfer Android file to host machine.
-  - `shell_exec`: Execute structured Android shell commands with context timeout, returning `{ stdout, stderr, exit_code, duration_ms }`.
-- **Security & Race Hardening**:
-  - `SECURITY.md`: Trust models, argument slice execution isolation (no `sh -c`), and host/device execution boundary separation.
-  - Passed `go test -race ./...` with zero data races across all packages.
-- **Performance Benchmarks (`bench/`)**:
-  - Micro-benchmarks for XML UI parsing (~49µs/op), selector searching (~49µs/op), tabular formatting (~2.6µs/op), ADB parsing (~1.2µs/op), and PNG screenshot visual annotation (~12.8ms/op).
+  - `android-mcp doctor`: Diagnostic CLI report checking ADB version, config files, device connections, notification backends, and tool count.
+  - `android-mcp status`: Concise status report returning exit code 0 when ready/connected.
+- **Expanded MCP Capabilities**: `list_apps`, `launch_app`, `stop_app`, `file_push`, `file_pull`, `shell_exec`.
 
 ---
 

@@ -1,48 +1,30 @@
-# Android-MCP-go TODO
+# Android-MCP-go TODO Checklist
 
-- [x] Init `go.mod` (`module android-mcp-go`)
-- [x] Implement `internal/config`:
-  - [x] Schema `Config` (`last_ip`, `device_serial`, `device_model`, `port`, `connection`, `last_seen`, `last_successful_connection`, `wifi_enabled`, `usb_bootstrap_enabled`)
-  - [x] `LoadConfig()`, `SaveConfigAtomic()`
-  - [x] `LoadScrcpyConfig()` from `~/.scrcpy/scrcpy.json`
-- [x] Implement `internal/notification`:
-  - [x] `Notifier` interface
-  - [x] `terminal-notifier` provider for macOS
-  - [x] `notify-send` provider for Linux
-  - [x] Fallback silent provider
-- [x] Implement `internal/adb`:
-  - [x] Path resolution (`PATH`, `~/.scrcpy/adb`, common locations)
-  - [x] `ListDevices()` parsing `adb devices -l`
-  - [x] `EnableTCPIP()`, `Connect()`, `Disconnect()`, `GetProp()`
-  - [x] `GetIPAddress()` multi-strategy parser (`ip -4 addr show`, `ip route`, `dhcp.wlan0.ipaddress`)
-  - [x] Screen capture (`exec-out screencap -p`)
-  - [x] UI XML dump (`uiautomator dump`)
-- [x] Implement `internal/ui`:
-  - [x] XML hierarchy parser into `ElementNode` struct
-  - [x] Element interactive classifier (`is_interactive`)
-  - [x] Bounding box & center coordinate math
-  - [x] `TreeState.ToString()` tabulate representation
-  - [x] Visual annotation on PNG screenshot (`image/draw`)
-- [x] Implement `internal/device`:
-  - [x] `DeviceManager` interface and implementation
-  - [x] Connection preference resolver (CLI > Env > android-mcp.json > scrcpy.json > Auto)
-  - [x] Auto-bootstrap workflow (USB -> IP discovery -> enable TCP/IP -> connect -> verify -> notify -> persist state)
-  - [x] Reconnect & fallback logic
-- [x] Implement `internal/mcp`:
-  - [x] Stdio JSON-RPC 2.0 protocol server
-  - [x] Implement all 14 MCP tools
-  - [x] Lazy device resolution wrapper (`RequireDevice()`)
-- [x] Implement `cmd/android-mcp/main.go`:
-  - [x] CLI flags parsing (`--device`, `--wifi`, `--usb`, `--connection`)
-  - [x] Environment variable parsing
-  - [x] Logging configuration
-- [x] Tests:
-  - [x] Config atomic save & scrcpy reader unit tests
-  - [x] ADB parser unit tests
-  - [x] IP discovery parser unit tests
-  - [x] UI XML hierarchy unit tests
-  - [x] MCP JSON-RPC protocol unit tests
-  - [x] Notification unit tests
-- [x] Verification:
-  - [x] Run `go build` and `go test ./...`
-  - [x] Test with physical Xperia hardware (`SOG09` @ `192.168.1.3:5555`)
+## Self-Contained Platform-Tools Management
+- [x] Implement `internal/platformtools` package.
+- [x] Managed directory under `~/.android-mcp/platform-tools/`.
+- [x] Official Android/Google URLs only (`dl.google.com/android/repository/platform-tools-latest-*.zip`).
+- [x] OS & Architecture detection (`darwin`, `linux`, `windows`).
+- [x] Zip Slip security validation during extraction.
+- [x] Atomic directory installation via `platform-tools.download/`.
+- [x] Installation & progress desktop notifications.
+- [x] Automatic fallback and resolution hierarchy (`ANDROID_MCP_ADB` > managed path > system ADB).
+- [x] CLI `android-mcp platform-tools status|update|reinstall`.
+
+## Debug Activity Notification System
+- [x] Throttled async activity notifier (`ActivityNotifier`).
+- [x] `--debug` flag triggers desktop activity notifications for AI actions.
+- [x] Redaction of sensitive parameters (passwords, tokens, secrets).
+- [x] Rate-limiting queue (default 250ms interval) to prevent desktop notification spam.
+- [x] Unique action IDs (`ACTION 8f4c2d`) linking desktop alerts to debug logs.
+
+## Reliability & Performance
+- [x] Offline execution when Platform-Tools are already installed.
+- [x] Graceful error message when missing and offline.
+- [x] Zero race conditions (`go test -race ./...` passing 100%).
+- [x] Physical verification on Sony Xperia (`SOG09`).
+
+## Documentation
+- [x] `docs/PLATFORM_TOOLS.md`
+- [x] `docs/NOTIFICATIONS.md`
+- [x] `README.md`, `SECURITY.md`, `CONFIGURATION.md`, `DEVELOPMENT.md`, `SKILLS.md`, `ROADMAP.md`, `CHANGELOG.md`.

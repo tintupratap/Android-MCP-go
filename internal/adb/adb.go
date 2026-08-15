@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -50,6 +51,11 @@ func (c *Client) ADBPath() string {
 }
 
 func FindADBPath() string {
+	if envPath := os.Getenv("ANDROID_MCP_ADB"); envPath != "" {
+		if _, err := os.Stat(envPath); err == nil {
+			return envPath
+		}
+	}
 	if envPath := os.Getenv("ADB"); envPath != "" {
 		if _, err := os.Stat(envPath); err == nil {
 			return envPath
@@ -58,6 +64,13 @@ func FindADBPath() string {
 
 	home, err := os.UserHomeDir()
 	if err == nil {
+		managedADB := filepath.Join(home, ".android-mcp", "platform-tools", "adb")
+		if runtime.GOOS == "windows" {
+			managedADB = filepath.Join(home, ".android-mcp", "platform-tools", "adb.exe")
+		}
+		if _, err := os.Stat(managedADB); err == nil {
+			return managedADB
+		}
 		scrcpyADB := filepath.Join(home, ".scrcpy", "adb")
 		if _, err := os.Stat(scrcpyADB); err == nil {
 			return scrcpyADB

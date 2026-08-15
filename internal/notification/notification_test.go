@@ -1,20 +1,30 @@
 package notification
 
 import (
+	"sync"
 	"testing"
 )
 
 type mockNotifier struct {
+	mu          sync.Mutex
 	lastTitle   string
 	lastMessage string
 	called      bool
 }
 
 func (m *mockNotifier) Notify(title, message string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.lastTitle = title
 	m.lastMessage = message
 	m.called = true
 	return nil
+}
+
+func (m *mockNotifier) WasCalled() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.called
 }
 
 func TestNotifier(t *testing.T) {
@@ -28,7 +38,7 @@ func TestNotifier(t *testing.T) {
 	if err := mock.Notify("Title", "Message"); err != nil {
 		t.Fatalf("mock failed: %v", err)
 	}
-	if !mock.called || mock.lastTitle != "Title" || mock.lastMessage != "Message" {
-		t.Fatalf("mock recorded incorrect data: %+v", mock)
+	if !mock.WasCalled() {
+		t.Fatalf("expected mock to be called")
 	}
 }

@@ -19,7 +19,7 @@ func TestMCPServerProtocol(t *testing.T) {
 	inBuf := &bytes.Buffer{}
 	outBuf := &bytes.Buffer{}
 
-	srv := NewServer(dm, nil, inBuf, outBuf)
+	srv := NewServer(dm, nil, inBuf, outBuf, nil)
 
 	// Send initialize request
 	initReq := `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05"}}` + "\n"
@@ -77,7 +77,7 @@ func TestLazyDeviceResolutionNoCrash(t *testing.T) {
 	t.Setenv("ADB", filepath.Join(tempHome, "bin", "adb"))
 
 	dm := device.NewDeviceManager(nil, nil, device.DevicePreference{})
-	srv := NewServer(dm, nil, nil, nil)
+	srv := NewServer(dm, nil, nil, nil, nil)
 
 	// Server startup / tool resolution should not panic when no device is connected
 	_, err := srv.requireDevice(context.Background())

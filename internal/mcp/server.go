@@ -16,6 +16,7 @@ import (
 	"github.com/tintupratap/Android-MCP-go/internal/adb"
 	"github.com/tintupratap/Android-MCP-go/internal/device"
 	"github.com/tintupratap/Android-MCP-go/internal/logging"
+	"github.com/tintupratap/Android-MCP-go/internal/notification"
 	"github.com/tintupratap/Android-MCP-go/internal/service"
 	"github.com/tintupratap/Android-MCP-go/internal/ui"
 )
@@ -27,13 +28,14 @@ type Server struct {
 	deviceManager device.DeviceManager
 	adbClient     *adb.Client
 	services      *service.Services
+	actNotifier   notification.ActivityNotifier
 	tools         map[string]Tool
 	handlers      map[string]ToolHandler
 	reader        *bufio.Reader
 	writer        io.Writer
 }
 
-func NewServer(dm device.DeviceManager, client *adb.Client, in io.Reader, out io.Writer) *Server {
+func NewServer(dm device.DeviceManager, client *adb.Client, in io.Reader, out io.Writer, actNotifier notification.ActivityNotifier) *Server {
 	if in == nil {
 		in = os.Stdin
 	}
@@ -47,6 +49,7 @@ func NewServer(dm device.DeviceManager, client *adb.Client, in io.Reader, out io
 		deviceManager: dm,
 		adbClient:     client,
 		services:      service.NewServices(client),
+		actNotifier:   actNotifier,
 		tools:         make(map[string]Tool),
 		handlers:      make(map[string]ToolHandler),
 		reader:        bufio.NewReader(in),
@@ -868,7 +871,40 @@ func (s *Server) handleRequest(ctx context.Context, req JSONRPCRequest) {
 			return
 		}
 
+		start := time.Now()
 		res, err := handler(ctx, params.Arguments)
+		duration := time.Since(start).Milliseconds()
+
+		if s.actNotifier != nil {
+			success := err == nil && (res == nil || !res.IsError)
+			actionID := notification.GenerateActionID()
+			desc := params.Name
+			if argText, ok := params.Arguments["text"].(string); ok && argText != "" {
+				desc += fmt.Sprintf(" %q", argText)
+			} else if argPkg, ok := params.Arguments["package_name"].(string); ok && argPkg != "" {
+				desc += fmt.Sprintf(" %s", argPkg)
+			} else if argBtn, ok := params.Arguments["button"].(string); ok && argBtn != "" {
+				desc += fmt.Sprintf(" %s", argBtn)
+			} else if argCmd, ok := params.Arguments["command"].(string); ok && argCmd != "" {
+				desc += fmt.Sprintf(" %s", argCmd)
+			}
+
+			devSerial := ""
+			if active := s.deviceManager.GetActiveDevice(); active != nil {
+				devSerial = active.Serial
+			}
+
+			s.actNotifier.NotifyActivity(ctx, notification.Activity{
+				ActionID:    actionID,
+				Tool:        params.Name,
+				Device:      devSerial,
+				Description: desc,
+				Timestamp:   start,
+				Success:     success,
+				DurationMS:  duration,
+			})
+		}
+
 		if err != nil {
 			s.sendError(req.ID, -32603, "Internal error", err.Error())
 			return
