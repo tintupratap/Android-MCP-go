@@ -287,6 +287,15 @@ func (c *Client) PullFile(ctx context.Context, serial, remotePath, localPath str
 }
 
 func (c *Client) DumpHierarchy(ctx context.Context, serial string) (string, error) {
+	if err := c.ensureHelperDex(ctx, serial); err == nil {
+		out, err := c.ExecuteShell(ctx, serial,
+			"app_process", "-Djava.class.path=/data/local/tmp/mcp-helper.dex", "/data/local/tmp",
+			"com.android.mcp.HelperMain", "dump")
+		if err == nil && (strings.Contains(out, "<?xml") || strings.Contains(out, "<node") || strings.Contains(out, "<hierarchy")) {
+			return out, nil
+		}
+	}
+
 	// Dump to /data/local/tmp/uidump.xml and cat content
 	dumpCmd := "uiautomator dump /data/local/tmp/uidump.xml > /dev/null 2>&1 && cat /data/local/tmp/uidump.xml"
 	out, err := c.ExecuteShell(ctx, serial, dumpCmd)
