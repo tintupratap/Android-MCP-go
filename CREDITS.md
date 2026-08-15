@@ -63,6 +63,7 @@ See [LICENSE](LICENSE) for full legal text.
 ## 4. Special Thanks & Acknowledgments
 
 - **Romain Vimont ([@rom1v](https://github.com/rom1v))** and the **Genymobile Team** for creating and maintaining `scrcpy`, enabling seamless high-performance Android device mirroring.
+- **Jeomon George ([@jeo_geo_alukka](https://github.com/Jeomon))** and **CursorTouch** for creating [`Android-MCP`](https://github.com/CursorTouch/Android-MCP), the original Python inspiration.
 - **The Android Open Source Project (AOSP)** for providing the foundational ADB infrastructure.
 - **The Anthropic Team** for designing and open-sourcing the Model Context Protocol (MCP) standard.
 - **The Go Team** for developing an extraordinary language and runtime for building robust system tooling.

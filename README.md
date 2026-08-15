@@ -224,7 +224,7 @@ android-mcp scrcpy stop
 ## 👏 Credits & Special Thanks
 
 - **Romain Vimont ([@rom1v](https://github.com/rom1v)) & Genymobile** for [`scrcpy`](https://github.com/Genymobile/scrcpy).
-- **Jeomon George ([@@jeo_geo_alukka](https://github.com/Jeomon)) & CursorTouch** for [`Android-MCP`](https://github.com/CursorTouch/Android-MCP), the inspiration.
+- **Jeomon George ([@jeo_geo_alukka](https://github.com/Jeomon)) & CursorTouch** for [`Android-MCP`](https://github.com/CursorTouch/Android-MCP), the inspiration.
 - **The Android Open Source Project (AOSP) / Google** for the Android Debug Bridge (ADB) and Platform-Tools.
 - **Anthropic** for the Model Context Protocol (MCP) open specification.
 - **The Go Authors** for the Go language compiler and runtime.
