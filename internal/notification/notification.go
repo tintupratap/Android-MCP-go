@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"strings"
 
-	"android-mcp-go/internal/logging"
+	"github.com/tintupratap/Android-MCP-go/internal/logging"
 )
 
 type Notifier interface {

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"android-mcp-go/internal/logging"
+	"github.com/tintupratap/Android-MCP-go/internal/logging"
 )
 
 // Config represents persistent device state in ~/.android-mcp/android-mcp.json

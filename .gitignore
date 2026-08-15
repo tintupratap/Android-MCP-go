@@ -1,0 +1,33 @@
+# Binaries
+android-mcp
+android-mcp-*
+*.exe
+*.exe.test
+*.test
+*.prof
+
+# Build & Temporary Files
+.tmp/
+dist/
+build/
+*.bak
+*.tmp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Coverage
+coverage.out
+coverage.html

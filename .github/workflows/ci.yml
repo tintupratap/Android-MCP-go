@@ -1,0 +1,40 @@
+name: CI & Build Matrix
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Build & Test (${{ matrix.os }}, Go ${{ matrix.go-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        go-version: ['1.22', '1.23']
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true
+
+      - name: Verify Go Module
+        run: go mod verify
+
+      - name: Run Unit Tests (with Race Detector)
+        if: matrix.os != 'windows-latest'
+        run: go test -v -race ./...
+
+      - name: Run Unit Tests (Windows)
+        if: matrix.os == 'windows-latest'
+        run: go test -v ./...
+
+      - name: Build Executable Binary
+        run: go build -v -o android-mcp ./cmd/android-mcp

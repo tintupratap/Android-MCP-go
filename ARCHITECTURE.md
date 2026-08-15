@@ -1,5 +1,8 @@
 # Android-MCP-go Architecture
 
+> **Repository**: [https://github.com/tintupratap/Android-MCP-go](https://github.com/tintupratap/Android-MCP-go)  
+> **Author**: Ranapratap ([tintupratap@gmail.com](mailto:tintupratap@gmail.com))
+
 ## Overview
 
 `Android-MCP-go` is a native Go implementation of the Android Model Context Protocol (MCP) server. It exposes mobile automation and device inspection capabilities to AI assistants via the standard MCP stdio protocol, featuring automatic wireless ADB bootstrapping, persistent device state management, and desktop notification integration.

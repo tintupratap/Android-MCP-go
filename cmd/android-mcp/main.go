@@ -9,12 +9,12 @@ import (
 	"strings"
 	"syscall"
 
-	"android-mcp-go/internal/adb"
-	"android-mcp-go/internal/device"
-	"android-mcp-go/internal/doctor"
-	"android-mcp-go/internal/logging"
-	"android-mcp-go/internal/mcp"
-	"android-mcp-go/internal/notification"
+	"github.com/tintupratap/Android-MCP-go/internal/adb"
+	"github.com/tintupratap/Android-MCP-go/internal/device"
+	"github.com/tintupratap/Android-MCP-go/internal/doctor"
+	"github.com/tintupratap/Android-MCP-go/internal/logging"
+	"github.com/tintupratap/Android-MCP-go/internal/mcp"
+	"github.com/tintupratap/Android-MCP-go/internal/notification"
 )
 
 const Version = "0.2.0"

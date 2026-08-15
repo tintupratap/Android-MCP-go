@@ -7,11 +7,11 @@ import (
 	"sync"
 	"time"
 
-	"android-mcp-go/internal/adb"
-	"android-mcp-go/internal/config"
-	"android-mcp-go/internal/discovery"
-	"android-mcp-go/internal/logging"
-	"android-mcp-go/internal/notification"
+	"github.com/tintupratap/Android-MCP-go/internal/adb"
+	"github.com/tintupratap/Android-MCP-go/internal/config"
+	"github.com/tintupratap/Android-MCP-go/internal/discovery"
+	"github.com/tintupratap/Android-MCP-go/internal/logging"
+	"github.com/tintupratap/Android-MCP-go/internal/notification"
 )
 
 type ConnectionState string

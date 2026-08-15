@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"android-mcp-go/internal/device"
+	"github.com/tintupratap/Android-MCP-go/internal/device"
 )
 
 func TestMCPServerProtocol(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"android-mcp-go/internal/adb"
-	"android-mcp-go/internal/ui"
+	"github.com/tintupratap/Android-MCP-go/internal/adb"
+	"github.com/tintupratap/Android-MCP-go/internal/ui"
 )
 
 type Services struct {

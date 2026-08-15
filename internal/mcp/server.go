@@ -13,11 +13,11 @@ import (
 	"sync"
 	"time"
 
-	"android-mcp-go/internal/adb"
-	"android-mcp-go/internal/device"
-	"android-mcp-go/internal/logging"
-	"android-mcp-go/internal/service"
-	"android-mcp-go/internal/ui"
+	"github.com/tintupratap/Android-MCP-go/internal/adb"
+	"github.com/tintupratap/Android-MCP-go/internal/device"
+	"github.com/tintupratap/Android-MCP-go/internal/logging"
+	"github.com/tintupratap/Android-MCP-go/internal/service"
+	"github.com/tintupratap/Android-MCP-go/internal/ui"
 )
 
 type ToolHandler func(ctx context.Context, args map[string]interface{}) (*CallToolResult, error)

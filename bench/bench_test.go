@@ -7,8 +7,8 @@ import (
 	"image/png"
 	"testing"
 
-	"android-mcp-go/internal/adb"
-	"android-mcp-go/internal/ui"
+	"github.com/tintupratap/Android-MCP-go/internal/adb"
+	"github.com/tintupratap/Android-MCP-go/internal/ui"
 )
 
 const sampleXML = `<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>

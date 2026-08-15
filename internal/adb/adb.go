@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"android-mcp-go/internal/logging"
+	"github.com/tintupratap/Android-MCP-go/internal/logging"
 )
 
 type ADBDevice struct {

@@ -1,5 +1,8 @@
 # Android-MCP-go Development Guide
 
+> **Repository**: [https://github.com/tintupratap/Android-MCP-go](https://github.com/tintupratap/Android-MCP-go)  
+> **Author**: Ranapratap ([tintupratap@gmail.com](mailto:tintupratap@gmail.com))
+
 ## Project Structure
 
 ```text

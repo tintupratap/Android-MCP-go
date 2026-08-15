@@ -1,5 +1,5 @@
-module android-mcp-go
+module github.com/tintupratap/Android-MCP-go
 
-go 1.26.1
+go 1.25.0
 
-require golang.org/x/image v0.45.0 // indirect
+require golang.org/x/image v0.45.0

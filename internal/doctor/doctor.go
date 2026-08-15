@@ -7,9 +7,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"android-mcp-go/internal/adb"
-	"android-mcp-go/internal/config"
-	"android-mcp-go/internal/device"
+	"github.com/tintupratap/Android-MCP-go/internal/adb"
+	"github.com/tintupratap/Android-MCP-go/internal/config"
+	"github.com/tintupratap/Android-MCP-go/internal/device"
 )
 
 type DoctorReport struct {
