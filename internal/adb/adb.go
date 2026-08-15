@@ -3,6 +3,7 @@ package adb
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"fmt"
 	"os"
 	"os/exec"
@@ -340,10 +341,44 @@ func (c *Client) Swipe(ctx context.Context, serial string, x1, y1, x2, y2, durat
 	return err
 }
 
+//go:embed drag.dex
+var dragDexBytes []byte
+
+func (c *Client) ensureDragDex(ctx context.Context, serial string) error {
+	remotePath := "/data/local/tmp/drag.dex"
+	out, err := c.ExecuteShell(ctx, serial, "ls", remotePath)
+	if err == nil && strings.Contains(out, "drag.dex") {
+		return nil
+	}
+	tmpFile, err := os.CreateTemp("", "drag-*.dex")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmpFile.Name())
+	if _, err := tmpFile.Write(dragDexBytes); err != nil {
+		tmpFile.Close()
+		return err
+	}
+	tmpFile.Close()
+	return c.PushFile(ctx, serial, tmpFile.Name(), remotePath)
+}
+
 func (c *Client) Drag(ctx context.Context, serial string, x1, y1, x2, y2, durationMs int) error {
 	if durationMs <= 0 {
 		durationMs = 1000
 	}
+	if err := c.ensureDragDex(ctx, serial); err == nil {
+		out, err := c.ExecuteShell(ctx, serial,
+			"app_process", "-Djava.class.path=/data/local/tmp/drag.dex", "/data/local/tmp",
+			"com.android.mcp.DragMain",
+			fmt.Sprintf("%d", x1), fmt.Sprintf("%d", y1),
+			fmt.Sprintf("%d", x2), fmt.Sprintf("%d", y2),
+			fmt.Sprintf("%d", durationMs))
+		if err == nil && strings.Contains(out, "DRAG_SUCCESS") {
+			return nil
+		}
+	}
+
 	_, err := c.ExecuteShell(ctx, serial, "input", "draganddrop",
 		fmt.Sprintf("%d", x1), fmt.Sprintf("%d", y1),
 		fmt.Sprintf("%d", x2), fmt.Sprintf("%d", y2),
