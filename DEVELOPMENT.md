@@ -47,7 +47,7 @@ go build -o android-mcp ./cmd/android-mcp
 
 # 3. (Optional) Recompile embedded Android DEX helper from Java source:
 # mkdir -p build/out
-# javac -cp $ANDROID_HOME/platforms/android-34/android.jar -d build/out build/src/com/android/mcp/HelperMain.java
+# javac -cp $ANDROID_HOME/platforms/android-34/android.jar -d build/out internal/adb/java/com/android/mcp/HelperMain.java
 # $ANDROID_HOME/build-tools/34.0.0/d8 --output ./ build/out/com/android/mcp/HelperMain.class
 # mv classes.dex internal/adb/mcp-helper.dex
 
