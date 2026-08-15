@@ -475,7 +475,10 @@ func (s *Server) registerTools() {
 		if err := s.services.Input.Type(ctx, dev.Serial, x, y, textStr, clear); err != nil {
 			return errorResult(err.Error()), nil
 		}
-		return textResult(fmt.Sprintf("Typed %q on (%d,%d)", textStr, x, y)), nil
+		if x > 0 && y > 0 {
+			return textResult(fmt.Sprintf("Typed %q on (%d,%d)", textStr, x, y)), nil
+		}
+		return textResult(fmt.Sprintf("Typed %q into active element", textStr)), nil
 	})
 
 	// 10. Drag
@@ -503,7 +506,7 @@ func (s *Server) registerTools() {
 		x2, _ := getIntArg(args, "x2")
 		y2, _ := getIntArg(args, "y2")
 
-		if err := s.services.Input.Swipe(ctx, dev.Serial, x1, y1, x2, y2, 800); err != nil {
+		if err := s.services.Input.Drag(ctx, dev.Serial, x1, y1, x2, y2, 1000); err != nil {
 			return errorResult(err.Error()), nil
 		}
 		return textResult(fmt.Sprintf("Dragged from (%d,%d) and dropped on (%d,%d)", x1, y1, x2, y2)), nil

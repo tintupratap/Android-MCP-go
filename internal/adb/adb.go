@@ -340,6 +340,20 @@ func (c *Client) Swipe(ctx context.Context, serial string, x1, y1, x2, y2, durat
 	return err
 }
 
+func (c *Client) Drag(ctx context.Context, serial string, x1, y1, x2, y2, durationMs int) error {
+	if durationMs <= 0 {
+		durationMs = 1000
+	}
+	_, err := c.ExecuteShell(ctx, serial, "input", "draganddrop",
+		fmt.Sprintf("%d", x1), fmt.Sprintf("%d", y1),
+		fmt.Sprintf("%d", x2), fmt.Sprintf("%d", y2),
+		fmt.Sprintf("%d", durationMs))
+	if err == nil {
+		return nil
+	}
+	return c.Swipe(ctx, serial, x1, y1, x2, y2, durationMs)
+}
+
 func (c *Client) SendKeys(ctx context.Context, serial string, text string) error {
 	// Escape special characters for adb shell input text
 	escaped := strings.ReplaceAll(text, " ", "%s")

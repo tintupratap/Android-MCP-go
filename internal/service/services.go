@@ -57,6 +57,10 @@ func (s *InputService) Swipe(ctx context.Context, serial string, x1, y1, x2, y2,
 	return s.adbClient.Swipe(ctx, serial, x1, y1, x2, y2, durationMs)
 }
 
+func (s *InputService) Drag(ctx context.Context, serial string, x1, y1, x2, y2, durationMs int) error {
+	return s.adbClient.Drag(ctx, serial, x1, y1, x2, y2, durationMs)
+}
+
 func (s *InputService) Type(ctx context.Context, serial string, x, y int, text string, clear bool) error {
 	if x > 0 && y > 0 {
 		_ = s.adbClient.Tap(ctx, serial, x, y)
