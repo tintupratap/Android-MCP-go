@@ -147,7 +147,11 @@ func (s *Server) registerTools() {
 	connectDevHandler := func(ctx context.Context, args map[string]interface{}) (*CallToolResult, error) {
 		serial, _ := args["serial"].(string)
 		if serial == "" {
-			return errorResult("Error: serial argument required"), nil
+			dev, err := s.deviceManager.Resolve(ctx)
+			if err != nil {
+				return errorResult(err.Error()), nil
+			}
+			return textResult(fmt.Sprintf("Connected to %s", dev.Serial)), nil
 		}
 		dev, err := s.deviceManager.Connect(ctx, serial)
 		if err != nil {
@@ -188,8 +192,8 @@ func (s *Server) registerTools() {
 		action, _ := args["action"].(string)
 		serial, _ := args["serial"].(string)
 
-		switch action {
-		case "list":
+		switch strings.ToLower(action) {
+		case "", "list", "get", "info", "status":
 			return listDevHandler(ctx, args)
 		case "connect":
 			if serial == "" {
@@ -204,7 +208,7 @@ func (s *Server) registerTools() {
 			_ = s.deviceManager.Disconnect(ctx)
 			return textResult("Disconnected from device."), nil
 		default:
-			return errorResult(fmt.Sprintf("Unknown action: %s", action)), nil
+			return listDevHandler(ctx, args)
 		}
 	})
 
