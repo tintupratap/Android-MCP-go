@@ -8,7 +8,7 @@ import (
 
 func TestDoctorAndStatus(t *testing.T) {
 	ctx := context.Background()
-	rep := RunDoctor(ctx, nil, nil, nil)
+	rep := RunDoctor(ctx, nil, nil, nil, nil)
 	if rep == nil {
 		t.Fatalf("expected doctor report")
 	}
@@ -18,7 +18,7 @@ func TestDoctorAndStatus(t *testing.T) {
 		t.Fatalf("unexpected doctor format output: %s", formatted)
 	}
 
-	statusStr, _ := RunStatus(ctx, nil)
+	statusStr, _ := RunStatus(ctx, nil, nil)
 	if !strings.Contains(statusStr, "Android-MCP") {
 		t.Fatalf("unexpected status output: %s", statusStr)
 	}

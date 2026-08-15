@@ -1,0 +1,21 @@
+{
+  "domain": "platform_tools",
+  "description": "Self-contained Android SDK Platform-Tools management",
+  "skills": [
+    {
+      "name": "platform_tools_status",
+      "command": "android-mcp platform-tools status",
+      "status": "PHYSICALLY VERIFIED"
+    },
+    {
+      "name": "platform_tools_update",
+      "command": "android-mcp platform-tools update",
+      "status": "PHYSICALLY VERIFIED"
+    },
+    {
+      "name": "platform_tools_reinstall",
+      "command": "android-mcp platform-tools reinstall",
+      "status": "PHYSICALLY VERIFIED"
+    }
+  ]
+}

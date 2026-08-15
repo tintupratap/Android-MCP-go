@@ -1,5 +1,20 @@
 # Android-MCP-go Changelog
 
+## [0.4.0] - 2026-08-15
+
+### Added
+- **Managed `scrcpy` & Automatic Live Screen Mirroring (`internal/scrcpy`)**:
+  - Automatically manages `scrcpy` under `~/.android-mcp/scrcpy/` from official GitHub Releases (`https://github.com/Genymobile/scrcpy/releases`).
+  - Automatically launches `scrcpy` GUI display window targeting the connected Android device serial (`scrcpy -s <serial> --window-title "Android-MCP — <model> (<serial>)"`) upon device connection (USB or WiFi ADB).
+  - Integrates with `~/.scrcpy/scrcpy.json` preferences (`video_codec`, `video_bitrate`, `display_id`, `audio_source`, `stay_awake`, `render_driver`).
+  - Duplicate window protection: checks running process per serial before launching to prevent multiple windows.
+  - Non-blocking background launch ensures server startup and MCP tool calls are never blocked.
+  - Subcommands: `android-mcp scrcpy status|update|start|stop|restart`.
+- **Documentation**:
+  - Added `docs/SCRCPY.md` detailing managed scrcpy architecture, workflow, safety features, and CLI commands.
+
+---
+
 ## [0.3.0] - 2026-08-15
 
 ### Added

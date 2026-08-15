@@ -3,6 +3,7 @@ package device
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/tintupratap/Android-MCP-go/internal/discovery"
 	"github.com/tintupratap/Android-MCP-go/internal/logging"
 	"github.com/tintupratap/Android-MCP-go/internal/notification"
+	"github.com/tintupratap/Android-MCP-go/internal/scrcpy"
 )
 
 type ConnectionState string
@@ -52,22 +54,30 @@ type DefaultDeviceManager struct {
 	adbClient    *adb.Client
 	bootstrapper *discovery.WirelessBootstrapper
 	notifier     notification.Notifier
+	scrcpyMgr    *scrcpy.Manager
 	preference   DevicePreference
 	activeDevice *Device
 	state        ConnectionState
 }
 
-func NewDeviceManager(client *adb.Client, notifier notification.Notifier, pref DevicePreference) *DefaultDeviceManager {
+func NewDeviceManager(client *adb.Client, notifier notification.Notifier, pref DevicePreference, scrcpyMgr *scrcpy.Manager) *DefaultDeviceManager {
 	if client == nil {
 		client = adb.NewClient("")
 	}
 	if notifier == nil {
 		notifier = notification.NewNotifier()
 	}
+	if scrcpyMgr == nil {
+		scrcpyMgr, _ = scrcpy.NewManager(notifier)
+	}
+
+	bs := discovery.NewWirelessBootstrapper(client, notifier)
+
 	return &DefaultDeviceManager{
 		adbClient:    client,
-		bootstrapper: discovery.NewWirelessBootstrapper(client, notifier),
 		notifier:     notifier,
+		bootstrapper: bs,
+		scrcpyMgr:    scrcpyMgr,
 		preference:   pref,
 		state:        StateNoDevice,
 	}
@@ -147,6 +157,28 @@ func (m *DefaultDeviceManager) connectLocked(ctx context.Context, serial string)
 	}
 
 	logging.Infof("Connected to target device: %s (%s, mode=%s)", model, target, connType)
+
+	cfg, errCfg := config.LoadConfig()
+	if errCfg == nil {
+		if connType == "wifi" {
+			parts := strings.Split(target, ":")
+			cfg.Device.LastIP = parts[0]
+		}
+		cfg.Device.Serial = target
+		cfg.Device.Model = model
+		cfg.Device.Connection = connType
+		cfg.LastSeen = time.Now()
+		cfg.LastSuccessfulConnection = time.Now()
+		_ = config.SaveConfig(cfg)
+	}
+
+	if m.scrcpyMgr != nil && os.Getenv("ANDROID_MCP_SCRCPY") != "false" {
+		go func(ser, mod string) {
+			title := fmt.Sprintf("Android-MCP — %s (%s)", mod, ser)
+			_ = m.scrcpyMgr.Launch(context.Background(), ser, title)
+		}(target, model)
+	}
+
 	return m.activeDevice, nil
 }
 
@@ -184,30 +216,30 @@ func (m *DefaultDeviceManager) Resolve(ctx context.Context) (*Device, error) {
 
 	// Priority 2: Persistent state ~/.android-mcp/android-mcp.json
 	cfg, err := config.LoadConfig()
-	if err == nil && cfg.LastIP != "" {
-		wifiAddr := adb.FormatWiFiSerial(cfg.LastIP, cfg.Port)
-		logging.Infof("Attempting to connect to cached android-mcp WiFi device %s...", wifiAddr)
-		dev, err := m.connectLocked(ctx, wifiAddr)
-		if err == nil {
-			// Update last_seen
-			cfg.LastSeen = time.Now()
-			cfg.LastSuccessfulConnection = time.Now()
-			_ = config.SaveConfig(cfg)
-			return dev, nil
+	if err == nil {
+		if cfg.Device.LastIP != "" {
+			port := cfg.Device.Port
+			if port <= 0 {
+				port = 5555
+			}
+			wifiAddr := adb.FormatWiFiSerial(cfg.Device.LastIP, port)
+			logging.Infof("Attempting to connect to cached WiFi device %s...", wifiAddr)
+			dev, err := m.connectLocked(ctx, wifiAddr)
+			if err == nil {
+				cfg.LastSeen = time.Now()
+				cfg.LastSuccessfulConnection = time.Now()
+				_ = config.SaveConfig(cfg)
+				return dev, nil
+			}
+			logging.Warnf("Cached WiFi device %s unavailable", wifiAddr)
+		} else if cfg.Device.Serial != "" {
+			logging.Infof("Attempting to connect to cached USB serial device %s...", cfg.Device.Serial)
+			dev, err := m.connectLocked(ctx, cfg.Device.Serial)
+			if err == nil {
+				return dev, nil
+			}
+			logging.Warnf("Cached USB serial device %s unavailable", cfg.Device.Serial)
 		}
-		logging.Warnf("Cached android-mcp WiFi device %s unavailable", wifiAddr)
-	}
-
-	// Priority 3: External scrcpy state ~/.scrcpy/scrcpy.json
-	scrcpyCfg, err := config.LoadScrcpyConfig()
-	if err == nil && scrcpyCfg != nil && scrcpyCfg.LastIP != "" {
-		scrcpyAddr := adb.FormatWiFiSerial(scrcpyCfg.LastIP, scrcpyCfg.Port)
-		logging.Infof("Attempting to connect to cached scrcpy WiFi device %s...", scrcpyAddr)
-		dev, err := m.connectLocked(ctx, scrcpyAddr)
-		if err == nil {
-			return dev, nil
-		}
-		logging.Warnf("Cached scrcpy WiFi device %s unavailable", scrcpyAddr)
 	}
 
 	// Priority 4: Auto-pick connected ADB devices

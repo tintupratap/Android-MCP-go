@@ -1,9 +1,12 @@
 # Android-MCP-go Skills & Capability Map
 
+> **Repository**: [https://github.com/tintupratap/Android-MCP-go](https://github.com/tintupratap/Android-MCP-go)  
+> **Author**: Ranapratap ([tintupratap@gmail.com](mailto:tintupratap@gmail.com))
+
 This document outlines the full capability map for **Android-MCP-go**, serving as a comprehensive reference for humans and AI agents.
 
 Status Vocabulary:
-- `PHYSICALLY VERIFIED`: Implemented, unit tested, and verified on physical Android hardware (e.g. Sony SOG09).
+- `PHYSICALLY VERIFIED`: Implemented, unit tested, race verified (`go test -race`), and physically verified on physical Android hardware (e.g. Sony Xperia SOG09).
 - `TESTED`: Implemented and covered by automated unit/integration tests.
 - `IMPLEMENTED`: Code complete and functionally working.
 - `PLANNED`: Designed and scheduled for future milestones.
@@ -71,7 +74,7 @@ Status Vocabulary:
 - **Requires root**: No
 - **Supported Android versions**: Android 4.4+
 - **Status**: `PHYSICALLY VERIFIED`
-- **Tests**: `internal/adb/adb_test.go`
+- **Tests**: `internal/adb/adb_test.go`, `e2e_test.py`
 
 ### Skill: Selector-Based Click
 - **Description**: Locate UI element matching text, resourceId, className, or description and click its center coordinate.
@@ -82,7 +85,7 @@ Status Vocabulary:
 - **Requires root**: No
 - **Supported Android versions**: Android 5.0+
 - **Status**: `PHYSICALLY VERIFIED`
-- **Tests**: `internal/ui/ui_test.go`
+- **Tests**: `internal/ui/ui_test.go`, `e2e_test.py`
 
 ### Skill: Swipe & Drag
 - **Description**: Perform touch swipe or drag-and-drop gesture between coordinates `(x1,y1)` and `(x2,y2)`.
@@ -92,8 +95,8 @@ Status Vocabulary:
 - **Requires device**: Yes
 - **Requires root**: No
 - **Supported Android versions**: Android 4.4+
-- **Status**: `TESTED`
-- **Tests**: `internal/adb/adb_test.go`
+- **Status**: `PHYSICALLY VERIFIED`
+- **Tests**: `internal/adb/adb_test.go`, `e2e_test.py`
 
 ### Skill: Key & Hardware Button Press
 - **Description**: Send Android keyevents (`KEYCODE_HOME`, `KEYCODE_BACK`, `KEYCODE_POWER`, etc.).
@@ -103,8 +106,8 @@ Status Vocabulary:
 - **Requires device**: Yes
 - **Requires root**: No
 - **Supported Android versions**: Android 4.4+
-- **Status**: `TESTED`
-- **Tests**: `internal/adb/adb_test.go`
+- **Status**: `PHYSICALLY VERIFIED`
+- **Tests**: `internal/adb/adb_test.go`, `e2e_test.py`
 
 ### Skill: Type Text
 - **Description**: Enter text at specific coordinates with optional field clearing.
@@ -114,8 +117,8 @@ Status Vocabulary:
 - **Requires device**: Yes
 - **Requires root**: No
 - **Supported Android versions**: Android 4.4+
-- **Status**: `TESTED`
-- **Tests**: `internal/adb/adb_test.go`
+- **Status**: `PHYSICALLY VERIFIED`
+- **Tests**: `internal/adb/adb_test.go`, `e2e_test.py`
 
 ### Skill: Element Wait
 - **Description**: Poll UI hierarchy until matching element appears or timeout expires.
@@ -125,8 +128,8 @@ Status Vocabulary:
 - **Requires device**: Yes
 - **Requires root**: No
 - **Supported Android versions**: Android 5.0+
-- **Status**: `TESTED`
-- **Tests**: `internal/ui/ui_test.go`
+- **Status**: `PHYSICALLY VERIFIED`
+- **Tests**: `internal/ui/ui_test.go`, `e2e_test.py`
 
 ---
 
@@ -166,8 +169,8 @@ Status Vocabulary:
 - **Requires device**: Yes
 - **Requires root**: No
 - **Supported Android versions**: Android 4.4+
-- **Status**: `IMPLEMENTED`
-- **Tests**: `internal/service/service_test.go`
+- **Status**: `PHYSICALLY VERIFIED`
+- **Tests**: `internal/service/service_test.go`, `e2e_test.py`
 
 ### Skill: Launch Application
 - **Description**: Launch package or activity via ADB `monkey` or `am start`.
@@ -177,8 +180,8 @@ Status Vocabulary:
 - **Requires device**: Yes
 - **Requires root**: No
 - **Supported Android versions**: Android 4.4+
-- **Status**: `IMPLEMENTED`
-- **Tests**: `internal/service/service_test.go`
+- **Status**: `PHYSICALLY VERIFIED`
+- **Tests**: `internal/service/service_test.go`, `e2e_test.py`
 
 ### Skill: Stop Application
 - **Description**: Force-stop application package via `am force-stop`.
@@ -188,8 +191,8 @@ Status Vocabulary:
 - **Requires device**: Yes
 - **Requires root**: No
 - **Supported Android versions**: Android 4.4+
-- **Status**: `IMPLEMENTED`
-- **Tests**: `internal/service/service_test.go`
+- **Status**: `PHYSICALLY VERIFIED`
+- **Tests**: `internal/service/service_test.go`, `e2e_test.py`
 
 ---
 
@@ -203,8 +206,8 @@ Status Vocabulary:
 - **Requires device**: Yes
 - **Requires root**: No (for `/sdcard` or `/data/local/tmp`)
 - **Supported Android versions**: Android 4.4+
-- **Status**: `IMPLEMENTED`
-- **Tests**: `internal/service/service_test.go`
+- **Status**: `PHYSICALLY VERIFIED`
+- **Tests**: `internal/service/service_test.go`, `e2e_test.py`
 
 ### Skill: Pull File
 - **Description**: Transfer Android file to host machine target path.
@@ -214,8 +217,8 @@ Status Vocabulary:
 - **Requires device**: Yes
 - **Requires root**: No (readable locations)
 - **Supported Android versions**: Android 4.4+
-- **Status**: `IMPLEMENTED`
-- **Tests**: `internal/service/service_test.go`
+- **Status**: `PHYSICALLY VERIFIED`
+- **Tests**: `internal/service/service_test.go`, `e2e_test.py`
 
 ---
 
@@ -229,15 +232,15 @@ Status Vocabulary:
 - **Requires device**: Yes
 - **Requires root**: No
 - **Supported Android versions**: Android 4.4+
-- **Status**: `IMPLEMENTED`
-- **Tests**: `internal/service/service_test.go`
+- **Status**: `PHYSICALLY VERIFIED`
+- **Tests**: `internal/service/service_test.go`, `e2e_test.py`
 
 ---
 
 ## 7. Diagnostics & System Engineering
 
 ### Skill: Health Doctor
-- **Description**: Complete diagnostic health check for ADB, config files, devices, notification backends, and MCP server.
+- **Description**: Complete diagnostic health check for ADB, Platform-Tools, managed scrcpy, config files, devices, notification backends, and MCP server.
 - **MCP tool**: CLI command `android-mcp doctor`
 - **Arguments**: None
 - **Return value**: Formatted health report text
@@ -245,7 +248,7 @@ Status Vocabulary:
 - **Requires root**: No
 - **Supported Android versions**: N/A
 - **Status**: `PHYSICALLY VERIFIED`
-- **Tests**: `cmd/android-mcp/main_test.go`
+- **Tests**: `internal/doctor/doctor_test.go`
 
 ### Skill: System Status
 - **Description**: Concise 1-line or 5-line operational status check with exit codes.
@@ -256,4 +259,34 @@ Status Vocabulary:
 - **Requires root**: No
 - **Supported Android versions**: N/A
 - **Status**: `PHYSICALLY VERIFIED`
-- **Tests**: `cmd/android-mcp/main_test.go`
+- **Tests**: `internal/doctor/doctor_test.go`
+
+---
+
+## 8. Managed Dependencies & Live Display Mirroring
+
+### Skill: Managed Platform-Tools Management
+- **Description**: Self-contained download, extraction, Zip Slip protection, and atomic installation of official Google Android SDK Platform-Tools (`adb`, `fastboot`) under `~/.android-mcp/platform-tools/`.
+- **MCP tool**: CLI subcommand `android-mcp platform-tools status|update|reinstall`
+- **Arguments**: Action subcommand
+- **Status**: `PHYSICALLY VERIFIED`
+- **Tests**: `internal/platformtools/platformtools_test.go`
+
+### Skill: Managed scrcpy & Automatic Live Mirroring
+- **Description**: Dynamic GitHub Release resolution, SHA-256 verification, Tar/Zip Slip protection, atomic installation under `~/.android-mcp/scrcpy/`, and non-blocking auto-launch of `scrcpy` live screen mirror window upon device connection.
+- **MCP tool**: CLI subcommand `android-mcp scrcpy status|update|reinstall|start|stop`
+- **Arguments**: Action subcommand
+- **Status**: `PHYSICALLY VERIFIED`
+- **Tests**: `internal/scrcpy/scrcpy_test.go`
+
+### Skill: Unified State & One-Time Migration
+- **Description**: Unified state storage under `~/.android-mcp/android-mcp.json` with atomic temporary file writes. Automatically imports legacy `~/.scrcpy/scrcpy.json` parameters into `android-mcp.json` on first load.
+- **MCP tool**: Internal `config` package
+- **Status**: `PHYSICALLY VERIFIED`
+- **Tests**: `internal/config/config_test.go`
+
+### Skill: Debug Activity Desktop Notifications
+- **Description**: Throttled desktop alerts for AI-agent actions (`--debug`) with rate-limiting anti-spam queues, action correlation IDs, and secret redaction.
+- **MCP tool**: CLI flag `--debug` / `internal/notification`
+- **Status**: `PHYSICALLY VERIFIED`
+- **Tests**: `internal/notification/activity_test.go`

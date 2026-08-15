@@ -16,12 +16,13 @@ import (
 	"github.com/tintupratap/Android-MCP-go/internal/mcp"
 	"github.com/tintupratap/Android-MCP-go/internal/notification"
 	"github.com/tintupratap/Android-MCP-go/internal/platformtools"
+	"github.com/tintupratap/Android-MCP-go/internal/scrcpy"
 )
 
 const Version = "0.2.0"
 
 func main() {
-	// Check for subcommand arguments first (e.g. android-mcp doctor, android-mcp status, android-mcp platform-tools)
+	// Check for subcommand arguments first (e.g. android-mcp doctor, android-mcp status, android-mcp platform-tools, android-mcp scrcpy)
 	if len(os.Args) > 1 {
 		subcmd := strings.ToLower(os.Args[1])
 		switch subcmd {
@@ -33,6 +34,9 @@ func main() {
 			return
 		case "platform-tools":
 			runPlatformToolsCmd(os.Args[2:])
+			os.Exit(0)
+		case "scrcpy":
+			runScrcpyCmd(os.Args[2:])
 			os.Exit(0)
 		}
 	}
@@ -103,7 +107,8 @@ func main() {
 	logging.Infof("Android-MCP-go v%s starting (connection=%s, source=%s, debug=%v)...", Version, pref.Connection, pref.Source, debugFlag)
 
 	adbClient := adb.NewClient("")
-	deviceMgr := device.NewDeviceManager(adbClient, notifier, pref)
+	scrcpyMgr, _ := scrcpy.NewManager(notifier)
+	deviceMgr := device.NewDeviceManager(adbClient, notifier, pref, scrcpyMgr)
 
 	server := mcp.NewServer(deviceMgr, adbClient, os.Stdin, os.Stdout, actNotifier)
 
@@ -112,6 +117,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	scrcpyMgr.StopAll()
 	logging.Infof("Android-MCP server shut down cleanly.")
 }
 
@@ -123,11 +129,12 @@ func runDoctorCmd() {
 	if ptMgr != nil && ptMgr.IsInstalled() {
 		_ = os.Setenv("ANDROID_MCP_ADB", ptMgr.ADBPath())
 	}
+	scrcpyMgr, _ := scrcpy.NewManager(notifier)
 
 	adbClient := adb.NewClient("")
-	deviceMgr := device.NewDeviceManager(adbClient, notifier, device.DevicePreference{})
+	deviceMgr := device.NewDeviceManager(adbClient, notifier, device.DevicePreference{}, scrcpyMgr)
 
-	rep := doctor.RunDoctor(ctx, deviceMgr, adbClient, ptMgr)
+	rep := doctor.RunDoctor(ctx, deviceMgr, adbClient, ptMgr, scrcpyMgr)
 	fmt.Print(rep.Format())
 }
 
@@ -139,14 +146,68 @@ func runStatusCmd() {
 	if ptMgr != nil && ptMgr.IsInstalled() {
 		_ = os.Setenv("ANDROID_MCP_ADB", ptMgr.ADBPath())
 	}
+	scrcpyMgr, _ := scrcpy.NewManager(notifier)
 
 	adbClient := adb.NewClient("")
-	deviceMgr := device.NewDeviceManager(adbClient, notifier, device.DevicePreference{})
+	deviceMgr := device.NewDeviceManager(adbClient, notifier, device.DevicePreference{}, scrcpyMgr)
 
-	out, code := doctor.RunStatus(ctx, deviceMgr)
+	out, code := doctor.RunStatus(ctx, deviceMgr, scrcpyMgr)
 	fmt.Println(out)
 	if code != 0 {
 		os.Exit(code)
+	}
+}
+
+func runScrcpyCmd(args []string) {
+	ctx := context.Background()
+	notifier := notification.NewNotifier()
+	scrcpyMgr, err := scrcpy.NewManager(notifier)
+	if err != nil {
+		fmt.Printf("Error initializing scrcpy manager: %v\n", err)
+		os.Exit(1)
+	}
+
+	action := "status"
+	if len(args) > 0 {
+		action = strings.ToLower(args[0])
+	}
+
+	switch action {
+	case "status":
+		fmt.Printf("scrcpy Path:       %s\n", scrcpyMgr.Path())
+		fmt.Printf("scrcpy Binary:     %s\n", scrcpyMgr.BinaryPath())
+		fmt.Printf("Installed:         %v\n", scrcpyMgr.IsInstalled())
+		if scrcpyMgr.IsInstalled() {
+			ver, _ := scrcpyMgr.GetVersion(ctx)
+			fmt.Printf("Version:           %s\n", ver)
+		}
+	case "update", "reinstall":
+		fmt.Println("Downloading official scrcpy release...")
+		binPath, err := scrcpyMgr.Ensure(ctx)
+		if err != nil {
+			fmt.Printf("❌ Failed to update scrcpy: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("✓ scrcpy ready at %s\n", binPath)
+	case "start", "launch":
+		adbClient := adb.NewClient("")
+		devs, _ := adbClient.ListDevices(ctx)
+		if len(devs) == 0 {
+			fmt.Println("❌ No connected Android device found.")
+			os.Exit(1)
+		}
+		serial := devs[0].Serial
+		fmt.Printf("Launching scrcpy screen mirror for device %s...\n", serial)
+		if err := scrcpyMgr.Launch(ctx, serial, fmt.Sprintf("Android-MCP — %s", serial)); err != nil {
+			fmt.Printf("❌ Launch failed: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("✓ Screen mirror window launched!")
+	case "stop":
+		scrcpyMgr.StopAll()
+		fmt.Println("✓ Stopped active scrcpy screen mirror processes.")
+	default:
+		fmt.Printf("Unknown scrcpy subcommand: %s. Use status, update, start, or stop.\n", action)
 	}
 }
 

@@ -17,7 +17,7 @@ func TestDevicePreference(t *testing.T) {
 }
 
 func TestDeviceStates(t *testing.T) {
-	dm := NewDeviceManager(nil, nil, DevicePreference{})
+	dm := NewDeviceManager(nil, nil, DevicePreference{}, nil)
 	if dm.State() != StateNoDevice {
 		t.Fatalf("expected initial state NoDevice, got %s", dm.State())
 	}

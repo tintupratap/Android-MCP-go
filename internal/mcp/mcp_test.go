@@ -15,7 +15,7 @@ func TestMCPServerProtocol(t *testing.T) {
 	tempHome := t.TempDir()
 	t.Setenv("HOME", tempHome)
 
-	dm := device.NewDeviceManager(nil, nil, device.DevicePreference{})
+	dm := device.NewDeviceManager(nil, nil, device.DevicePreference{}, nil)
 	inBuf := &bytes.Buffer{}
 	outBuf := &bytes.Buffer{}
 
@@ -76,7 +76,7 @@ func TestLazyDeviceResolutionNoCrash(t *testing.T) {
 	t.Setenv("PATH", filepath.Join(tempHome, "bin"))
 	t.Setenv("ADB", filepath.Join(tempHome, "bin", "adb"))
 
-	dm := device.NewDeviceManager(nil, nil, device.DevicePreference{})
+	dm := device.NewDeviceManager(nil, nil, device.DevicePreference{}, nil)
 	srv := NewServer(dm, nil, nil, nil, nil)
 
 	// Server startup / tool resolution should not panic when no device is connected

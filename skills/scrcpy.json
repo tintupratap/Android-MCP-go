@@ -1,0 +1,26 @@
+{
+  "domain": "scrcpy",
+  "description": "Managed scrcpy display mirroring and process management",
+  "skills": [
+    {
+      "name": "managed_scrcpy_status",
+      "command": "android-mcp scrcpy status",
+      "status": "PHYSICALLY VERIFIED"
+    },
+    {
+      "name": "managed_scrcpy_update",
+      "command": "android-mcp scrcpy update",
+      "status": "PHYSICALLY VERIFIED"
+    },
+    {
+      "name": "managed_scrcpy_start",
+      "command": "android-mcp scrcpy start",
+      "status": "PHYSICALLY VERIFIED"
+    },
+    {
+      "name": "managed_scrcpy_stop",
+      "command": "android-mcp scrcpy stop",
+      "status": "PHYSICALLY VERIFIED"
+    }
+  ]
+}

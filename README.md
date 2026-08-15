@@ -41,11 +41,12 @@ go build -o android-mcp ./cmd/android-mcp
 ## 🚀 Key Features
 
 - **⚡ Native Go Runtime**: Zero Python overhead, instant startup (< 5ms), minimal footprint, single cross-platform binary.
+- **🖥️ Managed scrcpy Live Mirroring**: Automatically manages `scrcpy` from official GitHub releases (`Genymobile/scrcpy`) under `~/.android-mcp/scrcpy/` and launches a live GUI display window upon device connection. Observe the physical device in real time while AI agents automate actions!
 - **📦 Self-Contained Platform-Tools**: Automatically downloads, extracts, and manages official Google Android SDK Platform-Tools (`adb`, `fastboot`) under `~/.android-mcp/platform-tools/`. No manual ADB installation required!
 - **📡 Automatic USB → WiFi Bootstrap**: Connect via USB once; `Android-MCP-go` automatically discovers the device's WiFi IP address, switches ADB to TCP/IP mode (`port 5555`), verifies connection integrity, and persists state. USB can then be unplugged!
 - **💾 Atomic State Persistence**: Maintains connected device history in `~/.android-mcp/android-mcp.json` using atomic temporary file writes to prevent state corruption.
-- **🔍 scrcpy Integration**: Reads external device state from `~/.scrcpy/scrcpy.json` if present.
-- **🩺 Diagnostic Health Suite**: Includes `android-mcp doctor`, `android-mcp status`, and `android-mcp platform-tools` subcommands.
+- **🔍 scrcpy Integration**: Reads external device state and video/audio preferences from `~/.scrcpy/scrcpy.json`.
+- **🩺 Diagnostic Health Suite**: Includes `android-mcp doctor`, `android-mcp status`, `android-mcp platform-tools`, and `android-mcp scrcpy` subcommands.
 - **🔔 Debug Activity Notifications**: Real-time desktop alerts for AI-agent actions (`--debug`) with rate-limiting anti-spam queues and sensitive data redaction.
 - **💤 Lazy Device Resolution**: Server boots instantly even when no Android device is connected. Device resolution occurs when tools are invoked.
 - **🖼️ Visual Vision Engine**: Generates UI layout tables and visually annotated PNG screenshots with bounding boxes and index badges.

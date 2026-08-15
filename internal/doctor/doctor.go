@@ -11,6 +11,7 @@ import (
 	"github.com/tintupratap/Android-MCP-go/internal/config"
 	"github.com/tintupratap/Android-MCP-go/internal/device"
 	"github.com/tintupratap/Android-MCP-go/internal/platformtools"
+	"github.com/tintupratap/Android-MCP-go/internal/scrcpy"
 )
 
 type DoctorReport struct {
@@ -20,6 +21,11 @@ type DoctorReport struct {
 	PlatformToolsPath string
 	PTManaged         bool
 	PTSource          string
+	ScrcpyPath        string
+	ScrcpyBinary      string
+	ScrcpyInstalled   bool
+	ScrcpyVersion     string
+	ScrcpyRunning     bool
 	MCPConfigPath     string
 	MCPConfigStatus   string
 	ScrcpyConfigPath  string
@@ -36,7 +42,7 @@ type DoctorReport struct {
 	IsHealthy         bool
 }
 
-func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client, ptMgr *platformtools.DefaultManager) *DoctorReport {
+func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client, ptMgr *platformtools.DefaultManager, scrcpyMgr *scrcpy.Manager) *DoctorReport {
 	if client == nil {
 		client = adb.NewClient("")
 	}
@@ -52,6 +58,16 @@ func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client,
 		rep.PTManaged = ptMgr.IsInstalled()
 		url, _ := platformtools.ResolveOfficialURL("darwin")
 		rep.PTSource = url
+	}
+
+	if scrcpyMgr != nil {
+		rep.ScrcpyPath = scrcpyMgr.Path()
+		rep.ScrcpyBinary = scrcpyMgr.BinaryPath()
+		rep.ScrcpyInstalled = scrcpyMgr.IsInstalled()
+		if rep.ScrcpyInstalled {
+			ver, _ := scrcpyMgr.GetVersion(ctx)
+			rep.ScrcpyVersion = ver
+		}
 	}
 
 	// 1. ADB Version & Server Check
@@ -74,7 +90,7 @@ func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client,
 	if err == nil {
 		rep.MCPConfigPath = mcpPath
 		if _, err := os.Stat(mcpPath); err == nil {
-			rep.MCPConfigStatus = "OK"
+			rep.MCPConfigStatus = "OK (~/.android-mcp/android-mcp.json)"
 		} else {
 			rep.MCPConfigStatus = "Not Created Yet"
 		}
@@ -84,14 +100,12 @@ func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client,
 
 	scrcpyPath, err := config.GetScrcpyConfigPath()
 	if err == nil {
-		rep.ScrcpyConfigPath = scrcpyPath
 		if _, err := os.Stat(scrcpyPath); err == nil {
-			rep.ScrcpyStatus = "OK"
+			rep.ScrcpyConfigPath = scrcpyPath
+			rep.ScrcpyStatus = "Legacy File Found (Imported into android-mcp.json)"
 		} else {
-			rep.ScrcpyStatus = "Not Found"
+			rep.ScrcpyStatus = "None (Independent)"
 		}
-	} else {
-		rep.ScrcpyStatus = "Error"
 	}
 
 	// 3. Device Discovery
@@ -116,6 +130,9 @@ func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client,
 			rep.DeviceModel = dev.Model
 			rep.DeviceSerial = dev.Serial
 			rep.Endpoint = dev.Serial
+			if scrcpyMgr != nil {
+				rep.ScrcpyRunning = scrcpyMgr.IsRunning(dev.Serial)
+			}
 		}
 	}
 
@@ -155,6 +172,22 @@ func (r *DoctorReport) Format() string {
 		sb.WriteString(fmt.Sprintf("  Path:    %s\n", r.PlatformToolsPath))
 	}
 	sb.WriteString("  Source:  Official Android/Google\n\n")
+
+	sb.WriteString("scrcpy Screen Mirror:\n")
+	scrcpyState := "no"
+	if r.ScrcpyInstalled {
+		scrcpyState = "yes (installed)"
+	}
+	sb.WriteString(fmt.Sprintf("  Installed: %s\n", scrcpyState))
+	sb.WriteString(fmt.Sprintf("  Binary:    %s\n", r.ScrcpyBinary))
+	if r.ScrcpyVersion != "" {
+		sb.WriteString(fmt.Sprintf("  Version:   %s\n", r.ScrcpyVersion))
+	}
+	activeMirror := "no"
+	if r.ScrcpyRunning {
+		activeMirror = "yes (active display window)"
+	}
+	sb.WriteString(fmt.Sprintf("  Mirror:    %s\n\n", activeMirror))
 
 	sb.WriteString("Configuration:\n")
 	sb.WriteString(fmt.Sprintf("  android-mcp.json: %s (%s)\n", r.MCPConfigStatus, r.MCPConfigPath))
@@ -208,7 +241,7 @@ func (r *DoctorReport) Format() string {
 	return sb.String()
 }
 
-func RunStatus(ctx context.Context, dm device.DeviceManager) (string, int) {
+func RunStatus(ctx context.Context, dm device.DeviceManager, scrcpyMgr *scrcpy.Manager) (string, int) {
 	if dm == nil {
 		return "Android-MCP: Error initializing DeviceManager", 1
 	}
@@ -218,12 +251,18 @@ func RunStatus(ctx context.Context, dm device.DeviceManager) (string, int) {
 		return fmt.Sprintf("Android-MCP\nStatus: LAZY / NO DEVICE\nError: %v", err), 1
 	}
 
+	mirrorState := "Inactive"
+	if scrcpyMgr != nil && scrcpyMgr.IsRunning(dev.Serial) {
+		mirrorState = "Active"
+	}
+
 	var sb strings.Builder
 	sb.WriteString("Android-MCP\n")
 	sb.WriteString(fmt.Sprintf("Device:   %s\n", dev.Model))
 	sb.WriteString(fmt.Sprintf("Mode:     %s\n", strings.ToUpper(dev.Connection)))
 	sb.WriteString(fmt.Sprintf("Endpoint: %s\n", dev.Serial))
 	sb.WriteString("ADB:      Connected\n")
+	sb.WriteString(fmt.Sprintf("scrcpy:   %s\n", mirrorState))
 	sb.WriteString("Status:   READY\n")
 
 	return sb.String(), 0

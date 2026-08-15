@@ -5,46 +5,48 @@
 
 ## Overview
 
-`Android-MCP-go` is a native Go implementation of the Android Model Context Protocol (MCP) server. It exposes mobile automation and device inspection capabilities to AI assistants via the standard MCP stdio protocol, featuring automatic wireless ADB bootstrapping, persistent device state management, and desktop notification integration.
+`Android-MCP-go` is a native Go implementation of the Android Model Context Protocol (MCP) server. It exposes mobile automation, screen vision, and device inspection capabilities to AI assistants via standard stdio JSON-RPC 2.0, featuring self-contained Platform-Tools management, managed `scrcpy` display mirroring, automatic wireless ADB bootstrapping, unified state persistence, and debug desktop notifications.
 
 ---
 
-## 1. System Architecture
+## 1. System Architecture Diagram
 
 ```text
-                                ┌───────────────────────────┐
-                                │       MCP Client          │
-                                │ (Claude / Cursor / IDE)   │
-                                └─────────────┬─────────────┘
-                                              │ stdio (JSON-RPC 2.0)
-                                              ▼
-┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│ Android-MCP-go Server                                                                    │
-│                                                                                          │
-│   ┌──────────────────────────────────────────────────────────────────────────────────┐   │
-│   │ mcp/ (JSON-RPC Protocol Server & 14 Tool Handlers)                               │   │
-│   └────────────────────────┬─────────────────────────────────────────────────────────┘   │
-│                            │ Lazy Device Access                                          │
-│                            ▼                                                             │
-│   ┌──────────────────────────────────────────────────────────────────────────────────┐   │
-│   │ device/ (DeviceManager Orchestrator & State Machine)                             │   │
-│   └──────┬─────────────────┬──────────────────┬──────────────────┬───────────────────┘   │
-│          │                 │                  │                  │                       │
-│          ▼                 ▼                  ▼                  ▼                       │
-│   ┌──────────────┐  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐               │
-│   │ config/      │  │ discovery/   │   │ adb/         │   │ ui/          │               │
-│   │ Persistent   │  │ IP & Wireless│   │ ADB Command  │   │ XML Parser & │               │
-│   │ State        │  │ Bootstrap    │   │ Runner       │   │ Visual Annot.│               │
-│   └──────────────┘  └──────────────┘   └──────────────┘   └──────────────┘               │
-│          │                 │                  │                                          │
-└──────────┼─────────────────┼──────────────────┼──────────────────────────────────────────┘
-           │                 │                  │
-           ▼                 ▼                  ▼
-┌────────────────────┐ ┌──────────┐ ┌────────────────────────┐
-│ ~/.android-mcp/    │ │ macOS /  │ │ Connected Android      │
-│ android-mcp.json   │ │ Linux    │ │ Device (USB or Wi-Fi)  │
-│ & scrcpy.json      │ │ Notifier │ └────────────────────────┘
-└────────────────────┘ └──────────┘
+                               ┌───────────────────────────┐
+                               │        MCP Client         │
+                               │ (Claude / Cursor / IDE)   │
+                               └─────────────┬─────────────┘
+                                             │ stdio (JSON-RPC 2.0)
+                                             ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Android-MCP-go Server                                                                       │
+│                                                                                             │
+│   ┌─────────────────────────────────────────────────────────────────────────────────────┐   │
+│   │ internal/mcp (JSON-RPC Protocol Server & 23 Tool Handlers)                         │   │
+│   └────────────────────────┬────────────────────────────────────────────────────────────┘   │
+│                            │                                                                │
+│                            ▼                                                                │
+│   ┌─────────────────────────────────────────────────────────────────────────────────────┐   │
+│   │ internal/service (DeviceService, InputService, UIService, AppService, etc.)         │   │
+│   └────────────────────────┬────────────────────────────────────────────────────────────┘   │
+│                            │ Lazy Device Access                                             │
+│                            ▼                                                                │
+│   ┌─────────────────────────────────────────────────────────────────────────────────────┐   │
+│   │ internal/device (DeviceManager Orchestrator & State Machine)                        │   │
+│   └──────┬─────────────────┬──────────────────┬──────────────────┬──────────────────────┘   │
+│          │                 │                  │                  │                          │
+│          ▼                 ▼                  ▼                  ▼                          │
+│   ┌──────────────┐  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐                  │
+│   │ internal/    │  │ internal/    │   │ internal/    │   │ internal/    │                  │
+│   │ config       │  │ discovery    │   │ adb          │   │ ui           │                  │
+│   └──────────────┘  └──────────────┘   └──────────────┘   └──────────────┘                  │
+│          │                 │                  │                  │                          │
+│          ▼                 ▼                  ▼                  ▼                          │
+│   ┌────────────────────────────────────────────────────────────────────────┐                │
+│   │ internal/platformtools (Managed SDK Platform-Tools / adb)              │                │
+│   │ internal/scrcpy        (Managed scrcpy Release & Display Mirror)       │                │
+│   └────────────────────────────────────────────────────────────────────────┘                │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -52,57 +54,85 @@
 ## 2. Core Package Responsibilities
 
 ### `cmd/android-mcp/`
-Main executable entry point. Parses CLI flags (`--device`, `--wifi`, `--usb`, `--connection`), initializes logging, boots the MCP stdio server, and wires the `DeviceManager`.
+Main executable entry point. Parses CLI flags (`--device`, `--connection`, `--debug`), handles subcommands (`doctor`, `status`, `platform-tools`, `scrcpy`), boots the MCP stdio server, and wires the `DeviceManager`.
 
 ### `internal/config/`
-Manages persistent state in `~/.android-mcp/android-mcp.json` using atomic file writes (write to temp file + `os.Rename`). Also handles reading discovery data from `~/.scrcpy/scrcpy.json` if available.
+Manages persistent state in `~/.android-mcp/android-mcp.json` using atomic temporary file replacement. Implements one-time migration (`PerformOneTimeMigration`) for importing legacy `~/.scrcpy/scrcpy.json` parameters.
 
 ### `internal/adb/`
-Provides safe, structured execution of ADB commands via `exec.CommandContext`. Responsible for executing `devices -l`, `connect`, `disconnect`, `tcpip`, `shell input`, `shell uiautomator dump`, and `exec-out screencap`.
+Provides safe, structured execution of ADB commands via direct argument slice execution (`exec.CommandContext`). Manages connections, shell commands, file transfers (`PushFile`, `PullFile`), screencaps, and property queries.
+
+### `internal/platformtools/`
+Self-contained Platform-Tools manager. Automatically downloads, verifies, and installs official Google Android SDK Platform-Tools under `~/.android-mcp/platform-tools/` with Zip Slip protection.
+
+### `internal/scrcpy/`
+Managed `scrcpy` engine. Queries official GitHub Releases API (`Genymobile/scrcpy`), resolves OS/arch release assets, verifies SHA-256 digests, safely extracts archives, and launches non-blocking screen mirror display windows.
 
 ### `internal/discovery/`
-Contains wireless bootstrap engine:
+Wireless ADB bootstrap engine:
 - USB device detection.
 - Multi-strategy IP address discovery (`ip -4 addr show`, `ip route`, `dhcp.wlan0.ipaddress`).
 - TCP/IP mode setup (`adb tcpip 5555`).
 - Wireless connection verification.
 
 ### `internal/device/`
-Defines `DeviceManager` interface and explicit state machine (`NoDevice`, `USBDetected`, `BootstrappingWiFi`, `VerifyingWiFi`, `WiFiConnected`, `Reconnecting`). Handles connection priority (CLI > Env > android-mcp.json > scrcpy.json > Auto-pick physical device over emulator).
+Defines `DeviceManager` interface and state machine (`NoDevice`, `USBDetected`, `BootstrappingWiFi`, `WiFiConnected`, `USBConnected`). Enforces precedence logic (`android-mcp.json` > Auto-pick).
+
+### `internal/service/`
+Decoupled service layer mapping Android capabilities to MCP adapters:
+- `DeviceService` (`ListDevices`, `ConnectDevice`, `Device`)
+- `InputService` (`Click`, `LongClick`, `Swipe`, `Drag`, `Type`, `Press`)
+- `UIService` (`Snapshot`, `ClickBySelector`, `WaitForElement`)
+- `AppService` (`list_apps`, `launch_app`, `stop_app`)
+- `FileService` (`file_push`, `file_pull`)
+- `ShellService` (`shell_exec`)
 
 ### `internal/mcp/`
-Implements the JSON-RPC 2.0 stdio MCP transport protocol. Registers all 14 tools (`ListDevices`, `ConnectDevice`, `Device`, `Click`, `ClickBySelector`, `Snapshot`, `LongClick`, `Swipe`, `Type`, `Drag`, `Press`, `Notification`, `Wait`, `WaitForElement`).
+JSON-RPC 2.0 stdio transport protocol handler. Registers all 23 MCP tools and aliases.
 
 ### `internal/ui/`
-Parses UI hierarchy XML returned by `uiautomator dump`. Extracts interactive elements, builds layout bounding boxes, formats clean text tables, computes element center coordinates, and draws visual annotations on PNG screenshots.
+Parses UI hierarchy XML from `uiautomator dump`. Extracts interactive elements, builds bounding boxes, computes element center coordinates, and draws visual annotations on PNG screenshots.
 
 ### `internal/notification/`
-Cross-platform desktop notifier interface. Invokes `terminal-notifier` on macOS, `notify-send` on Linux, or logs silently on unsupported platforms. Failures are non-fatal.
+Cross-platform desktop notifier interface with rate-limited `--debug` activity notification engine (`ActivityNotifier`) and automatic secret redaction.
 
 ---
 
-## 3. Persistent Configuration Schema (`android-mcp.json`)
+## 3. Persistent Configuration Schema (`~/.android-mcp/android-mcp.json`)
 
 ```json
 {
-  "last_ip": "192.168.1.3",
-  "device_serial": "QV771A3JEE",
-  "device_model": "SOG09",
-  "port": 5555,
-  "connection": "wifi",
-  "last_seen": "2026-08-15T05:35:46Z",
-  "last_successful_connection": "2026-08-15T05:35:46Z",
-  "wifi_enabled": true,
-  "usb_bootstrap_enabled": true
+  "version": 1,
+  "device": {
+    "last_ip": "192.168.1.3",
+    "serial": "QV771A3JEE",
+    "model": "SOG09",
+    "port": 5555,
+    "connection": "wifi"
+  },
+  "scrcpy": {
+    "enabled": true,
+    "auto_start": true,
+    "video_codec": "h265",
+    "video_bitrate": "4M",
+    "audio_source": "playback",
+    "stay_awake": true,
+    "render_driver": "metal"
+  },
+  "platform_tools": {
+    "managed": true,
+    "path": "~/.android-mcp/platform-tools",
+    "version": "1.0.41",
+    "source": "official-google"
+  },
+  "managed_scrcpy": {
+    "managed": true,
+    "path": "~/.android-mcp/scrcpy",
+    "release": "v4.1",
+    "source": "https://github.com/Genymobile/scrcpy"
+  },
+  "notifications": {
+    "enabled": true
+  }
 }
 ```
-
----
-
-## 4. Connection Priority & Resolution Logic
-
-1. **CLI Flags**: `--device`, `--wifi`, `--usb`, `--connection`.
-2. **Environment Variables**: `ANDROID_MCP_DEVICE`, `ANDROID_MCP_CONNECTION`, `ANDROID_MCP_HOST`.
-3. **Android-MCP State**: `~/.android-mcp/android-mcp.json`.
-4. **scrcpy State**: `~/.scrcpy/scrcpy.json`.
-5. **Auto Discovery**: Scans connected USB/WiFi devices and prefers physical devices over emulators.

@@ -7,7 +7,7 @@
 
 ## Phase 2 — Core Foundations & Packages ✅
 - [x] Go module initialization (`go.mod`).
-- [x] `internal/config`: Persistent state schema (`android-mcp.json`) & atomic file operations + `scrcpy.json` reader.
+- [x] `internal/config`: Persistent state schema (`android-mcp.json`) & atomic file operations.
 - [x] `internal/adb`: Safe ADB command runner (`exec.CommandContext`).
 - [x] `internal/notification`: Platform-aware notifications (`terminal-notifier` / `notify-send`).
 - [x] `internal/discovery`: Multi-strategy IP discovery & TCP/IP bootstrap engine.
@@ -18,14 +18,28 @@
 
 ## Phase 4 — MCP Protocol & Server ✅
 - [x] `internal/mcp`: JSON-RPC 2.0 stdio server protocol implementation.
-- [x] Port all 14 MCP tools (`ListDevices`, `ConnectDevice`, `Device`, `Click`, `ClickBySelector`, `Snapshot`, `LongClick`, `Swipe`, `Type`, `Drag`, `Press`, `Notification`, `Wait`, `WaitForElement`).
+- [x] Port all 23 MCP tools and aliases (`ListDevices`, `ConnectDevice`, `Device`, `Click`, `ClickBySelector`, `Snapshot`, `LongClick`, `Swipe`, `Type`, `Drag`, `Press`, `Notification`, `Wait`, `WaitForElement`, `list_apps`, `launch_app`, `stop_app`, `file_push`, `file_pull`, `shell_exec`).
 - [x] CLI flags and environment variables integration.
 - [x] Lazy device resolution (server boots cleanly without connected devices).
 
-## Phase 5 — Testing & Quality Assurance ✅
-- [x] Unit tests for config, adb parsing, IP discovery, state machine, XML UI parser, notification, and MCP tool serialization (100% passing across all packages).
-- [x] Physical device verification against connected Xperia (`SOG09`) phone (`192.168.1.3:5555`) covering JSON-RPC stdio protocol, `ListDevices`, text layout `Snapshot`, and annotated visual image `Snapshot`.
+## Phase 5 — Self-Contained Platform-Tools Management ✅
+- [x] `internal/platformtools`: Automatic download, extraction, Zip Slip protection, and atomic installation of official Google Android SDK Platform-Tools under `~/.android-mcp/platform-tools/`.
+- [x] Subcommands `android-mcp platform-tools status|update|reinstall`.
 
-## Phase 6 — Documentation & Release ✅
-- [x] `README.md`, `ARCHITECTURE.md`, `CONFIGURATION.md`, `DEVELOPMENT.md`, `ROADMAP.md`, `TODO.md`, `docs/PORTING_ANALYSIS.md`.
-- [x] Clean compilation and end-to-end verification.
+## Phase 6 — Debug Activity Desktop Notification Engine ✅
+- [x] `ActivityNotifier`: Real-time desktop alerts for AI-agent actions (`--debug`) with rate-limiting anti-spam queues, action correlation IDs, and secret redaction.
+
+## Phase 7 — Managed scrcpy & Live Display Mirroring ✅
+- [x] `internal/scrcpy`: Dynamic GitHub Release resolution (`api.github.com/repos/Genymobile/scrcpy/releases/latest`), host OS/arch asset resolver (`darwin`, `linux`, `windows`), SHA-256 checksum verification, Tar/Zip Slip protection, atomic installation under `~/.android-mcp/scrcpy/`, and non-blocking auto-launch of `scrcpy` live display mirror window upon device connection.
+- [x] Subcommands `android-mcp scrcpy status|update|reinstall|start|stop`.
+
+## Phase 8 — Unified Configuration & Independence ✅
+- [x] Unified JSON schema in `~/.android-mcp/android-mcp.json`.
+- [x] Automatic one-time migration (`PerformOneTimeMigration`) importing legacy `~/.scrcpy/scrcpy.json` parameters.
+- [x] Elimination of runtime dependency on `~/.scrcpy/scrcpy.json` and external projects.
+
+## Phase 9 — Verification & GitHub Release ✅
+- [x] Unit tests passing 100% across all packages (`go test ./...`).
+- [x] Data race detector passing 100% (`go test -race ./...`).
+- [x] Physical device verification against connected Xperia (`SOG09`) phone (`192.168.1.3:5555`) covering all 23 MCP tools and live `scrcpy` screen mirroring.
+- [x] Complete documentation suite published.
