@@ -455,11 +455,11 @@ func (s *Server) registerTools() {
 			"type": "object",
 			"properties": map[string]interface{}{
 				"text":  map[string]interface{}{"type": "string"},
-				"x":     map[string]interface{}{"type": "integer"},
-				"y":     map[string]interface{}{"type": "integer"},
+				"x":     map[string]interface{}{"type": "integer", "default": 0},
+				"y":     map[string]interface{}{"type": "integer", "default": 0},
 				"clear": map[string]interface{}{"type": "boolean", "default": false},
 			},
-			"required": []string{"text", "x", "y"},
+			"required": []string{"text"},
 		},
 		Annotations: &ToolAnnotations{Title: "Type", DestructiveHint: true},
 	}, func(ctx context.Context, args map[string]interface{}) (*CallToolResult, error) {
@@ -516,9 +516,9 @@ func (s *Server) registerTools() {
 		InputSchema: map[string]interface{}{
 			"type": "object",
 			"properties": map[string]interface{}{
-				"button": map[string]interface{}{"type": "string"},
+				"button":  map[string]interface{}{"type": "string"},
+				"keycode": map[string]interface{}{"type": "string"},
 			},
-			"required": []string{"button"},
 		},
 		Annotations: &ToolAnnotations{Title: "Press", DestructiveHint: true},
 	}, func(ctx context.Context, args map[string]interface{}) (*CallToolResult, error) {
@@ -527,6 +527,12 @@ func (s *Server) registerTools() {
 			return errorResult(err.Error()), nil
 		}
 		btn, _ := args["button"].(string)
+		if btn == "" {
+			btn, _ = args["keycode"].(string)
+		}
+		if btn == "" {
+			return errorResult("Error: button or keycode argument required"), nil
+		}
 		if err := s.services.Input.Press(ctx, dev.Serial, btn); err != nil {
 			return errorResult(err.Error()), nil
 		}
