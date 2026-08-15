@@ -161,23 +161,11 @@ type FileService struct {
 }
 
 func (s *FileService) Push(ctx context.Context, serial, localPath, remotePath string) error {
-	args := []string{}
-	if serial != "" {
-		args = append(args, "-s", serial)
-	}
-	args = append(args, "push", localPath, remotePath)
-	_, err := s.adbClient.ExecuteShell(ctx, serial, args...)
-	return err
+	return s.adbClient.PushFile(ctx, serial, localPath, remotePath)
 }
 
 func (s *FileService) Pull(ctx context.Context, serial, remotePath, localPath string) error {
-	args := []string{}
-	if serial != "" {
-		args = append(args, "-s", serial)
-	}
-	args = append(args, "pull", remotePath, localPath)
-	_, err := s.adbClient.ExecuteShell(ctx, serial, args...)
-	return err
+	return s.adbClient.PullFile(ctx, serial, remotePath, localPath)
 }
 
 // -----------------------------------------------------------------------------

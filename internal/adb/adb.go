@@ -283,6 +283,26 @@ func (c *Client) ExecuteShell(ctx context.Context, serial string, shellArgs ...s
 	return c.runCmd(ctx, args...)
 }
 
+func (c *Client) PushFile(ctx context.Context, serial, localPath, remotePath string) error {
+	args := []string{}
+	if serial != "" {
+		args = append(args, "-s", serial)
+	}
+	args = append(args, "push", localPath, remotePath)
+	_, err := c.runCmd(ctx, args...)
+	return err
+}
+
+func (c *Client) PullFile(ctx context.Context, serial, remotePath, localPath string) error {
+	args := []string{}
+	if serial != "" {
+		args = append(args, "-s", serial)
+	}
+	args = append(args, "pull", remotePath, localPath)
+	_, err := c.runCmd(ctx, args...)
+	return err
+}
+
 func (c *Client) DumpHierarchy(ctx context.Context, serial string) (string, error) {
 	// Dump to /data/local/tmp/uidump.xml and cat content
 	dumpCmd := "uiautomator dump /data/local/tmp/uidump.xml > /dev/null 2>&1 && cat /data/local/tmp/uidump.xml"
