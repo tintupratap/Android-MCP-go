@@ -42,19 +42,25 @@ Android-MCP-go/
 # 1. Install via Go package manager
 go install github.com/tintupratap/Android-MCP-go/cmd/android-mcp@latest
 
-# 2. Build local binary
+# 2. Build local Go binary (pre-bundled with internal/adb/mcp-helper.dex)
 go build -o android-mcp ./cmd/android-mcp
 
-# 2. Run unit tests across all 15 packages
+# 3. (Optional) Recompile embedded Android DEX helper from Java source:
+# mkdir -p build/out
+# javac -cp $ANDROID_HOME/platforms/android-34/android.jar -d build/out build/src/com/android/mcp/HelperMain.java
+# $ANDROID_HOME/build-tools/34.0.0/d8 --output ./ build/out/com/android/mcp/HelperMain.class
+# mv classes.dex internal/adb/mcp-helper.dex
+
+# 4. Run unit tests across all 15 packages
 go test ./...
 
-# 3. Run data race detector across all packages
+# 5. Run data race detector across all packages
 go test -race ./...
 
-# 4. Run static code analysis
+# 6. Run static code analysis
 go vet ./...
 
-# 5. Run physical hardware E2E test suite (requires connected Android device)
+# 7. Run physical hardware E2E test suite (requires connected Android device)
 python3 e2e_test.py
 ```
 

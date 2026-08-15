@@ -35,6 +35,15 @@ go install github.com/tintupratap/Android-MCP-go/cmd/android-mcp@latest
 ```bash
 git clone https://github.com/tintupratap/Android-MCP-go.git
 cd Android-MCP-go
+
+# (Optional) Recompile the embedded Android DEX helper (mcp-helper.dex) from Java source:
+# Requires Android SDK platform android.jar and d8 build-tool:
+# mkdir -p build/out
+# javac -cp $ANDROID_HOME/platforms/android-34/android.jar -d build/out build/src/com/android/mcp/HelperMain.java
+# $ANDROID_HOME/build-tools/34.0.0/d8 --output ./ build/out/com/android/mcp/HelperMain.class
+# mv classes.dex internal/adb/mcp-helper.dex
+
+# Build the self-contained Go binary (pre-bundled with internal/adb/mcp-helper.dex):
 go build -o android-mcp ./cmd/android-mcp
 sudo cp android-mcp /usr/local/bin/
 ```
