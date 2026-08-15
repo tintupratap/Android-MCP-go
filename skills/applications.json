@@ -1,0 +1,26 @@
+{
+  "domain": "applications",
+  "skills": [
+    {
+      "id": "list_apps",
+      "name": "List Applications",
+      "mcp_tools": ["list_apps"],
+      "status": "IMPLEMENTED",
+      "requires_device": true
+    },
+    {
+      "id": "launch_app",
+      "name": "Launch Application",
+      "mcp_tools": ["launch_app"],
+      "status": "IMPLEMENTED",
+      "requires_device": true
+    },
+    {
+      "id": "stop_app",
+      "name": "Stop Application",
+      "mcp_tools": ["stop_app"],
+      "status": "IMPLEMENTED",
+      "requires_device": true
+    }
+  ]
+}

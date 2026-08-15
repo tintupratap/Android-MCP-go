@@ -1,0 +1,33 @@
+{
+  "domain": "device",
+  "skills": [
+    {
+      "id": "list_devices",
+      "name": "List Devices",
+      "mcp_tools": ["ListDevices", "device_list"],
+      "status": "PHYSICALLY VERIFIED",
+      "requires_device": false
+    },
+    {
+      "id": "connect_device",
+      "name": "Connect Device",
+      "mcp_tools": ["ConnectDevice", "device_connect"],
+      "status": "PHYSICALLY VERIFIED",
+      "requires_device": false
+    },
+    {
+      "id": "wireless_bootstrap",
+      "name": "Automatic USB to WiFi Bootstrap",
+      "mcp_tools": [],
+      "status": "PHYSICALLY VERIFIED",
+      "requires_device": true
+    },
+    {
+      "id": "lazy_resolution",
+      "name": "Lazy Device Resolution",
+      "mcp_tools": [],
+      "status": "PHYSICALLY VERIFIED",
+      "requires_device": false
+    }
+  ]
+}

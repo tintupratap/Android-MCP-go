@@ -1,0 +1,12 @@
+{
+  "domain": "screenshot",
+  "skills": [
+    {
+      "id": "annotated_screenshot",
+      "name": "Visual Annotated Screenshot",
+      "mcp_tools": ["Snapshot"],
+      "status": "PHYSICALLY VERIFIED",
+      "requires_device": true
+    }
+  ]
+}

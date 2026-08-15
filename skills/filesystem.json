@@ -1,0 +1,19 @@
+{
+  "domain": "filesystem",
+  "skills": [
+    {
+      "id": "file_push",
+      "name": "Push File",
+      "mcp_tools": ["file_push"],
+      "status": "IMPLEMENTED",
+      "requires_device": true
+    },
+    {
+      "id": "file_pull",
+      "name": "Pull File",
+      "mcp_tools": ["file_pull"],
+      "status": "IMPLEMENTED",
+      "requires_device": true
+    }
+  ]
+}

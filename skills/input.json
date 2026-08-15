@@ -1,0 +1,47 @@
+{
+  "domain": "input",
+  "skills": [
+    {
+      "id": "click",
+      "name": "Click Coordinate",
+      "mcp_tools": ["Click", "ui_click"],
+      "status": "PHYSICALLY VERIFIED",
+      "requires_device": true
+    },
+    {
+      "id": "long_click",
+      "name": "Long Click",
+      "mcp_tools": ["LongClick", "ui_long_click"],
+      "status": "TESTED",
+      "requires_device": true
+    },
+    {
+      "id": "swipe",
+      "name": "Swipe",
+      "mcp_tools": ["Swipe", "ui_swipe"],
+      "status": "TESTED",
+      "requires_device": true
+    },
+    {
+      "id": "drag",
+      "name": "Drag",
+      "mcp_tools": ["Drag", "ui_drag"],
+      "status": "TESTED",
+      "requires_device": true
+    },
+    {
+      "id": "type",
+      "name": "Type Text",
+      "mcp_tools": ["Type", "input_type"],
+      "status": "TESTED",
+      "requires_device": true
+    },
+    {
+      "id": "press",
+      "name": "Press Key",
+      "mcp_tools": ["Press", "input_press"],
+      "status": "TESTED",
+      "requires_device": true
+    }
+  ]
+}

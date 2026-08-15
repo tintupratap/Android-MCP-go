@@ -1,0 +1,48 @@
+# Android-MCP-go TODO
+
+- [x] Init `go.mod` (`module android-mcp-go`)
+- [x] Implement `internal/config`:
+  - [x] Schema `Config` (`last_ip`, `device_serial`, `device_model`, `port`, `connection`, `last_seen`, `last_successful_connection`, `wifi_enabled`, `usb_bootstrap_enabled`)
+  - [x] `LoadConfig()`, `SaveConfigAtomic()`
+  - [x] `LoadScrcpyConfig()` from `~/.scrcpy/scrcpy.json`
+- [x] Implement `internal/notification`:
+  - [x] `Notifier` interface
+  - [x] `terminal-notifier` provider for macOS
+  - [x] `notify-send` provider for Linux
+  - [x] Fallback silent provider
+- [x] Implement `internal/adb`:
+  - [x] Path resolution (`PATH`, `~/.scrcpy/adb`, common locations)
+  - [x] `ListDevices()` parsing `adb devices -l`
+  - [x] `EnableTCPIP()`, `Connect()`, `Disconnect()`, `GetProp()`
+  - [x] `GetIPAddress()` multi-strategy parser (`ip -4 addr show`, `ip route`, `dhcp.wlan0.ipaddress`)
+  - [x] Screen capture (`exec-out screencap -p`)
+  - [x] UI XML dump (`uiautomator dump`)
+- [x] Implement `internal/ui`:
+  - [x] XML hierarchy parser into `ElementNode` struct
+  - [x] Element interactive classifier (`is_interactive`)
+  - [x] Bounding box & center coordinate math
+  - [x] `TreeState.ToString()` tabulate representation
+  - [x] Visual annotation on PNG screenshot (`image/draw`)
+- [x] Implement `internal/device`:
+  - [x] `DeviceManager` interface and implementation
+  - [x] Connection preference resolver (CLI > Env > android-mcp.json > scrcpy.json > Auto)
+  - [x] Auto-bootstrap workflow (USB -> IP discovery -> enable TCP/IP -> connect -> verify -> notify -> persist state)
+  - [x] Reconnect & fallback logic
+- [x] Implement `internal/mcp`:
+  - [x] Stdio JSON-RPC 2.0 protocol server
+  - [x] Implement all 14 MCP tools
+  - [x] Lazy device resolution wrapper (`RequireDevice()`)
+- [x] Implement `cmd/android-mcp/main.go`:
+  - [x] CLI flags parsing (`--device`, `--wifi`, `--usb`, `--connection`)
+  - [x] Environment variable parsing
+  - [x] Logging configuration
+- [x] Tests:
+  - [x] Config atomic save & scrcpy reader unit tests
+  - [x] ADB parser unit tests
+  - [x] IP discovery parser unit tests
+  - [x] UI XML hierarchy unit tests
+  - [x] MCP JSON-RPC protocol unit tests
+  - [x] Notification unit tests
+- [x] Verification:
+  - [x] Run `go build` and `go test ./...`
+  - [x] Test with physical Xperia hardware (`SOG09` @ `192.168.1.3:5555`)

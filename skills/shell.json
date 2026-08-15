@@ -1,0 +1,12 @@
+{
+  "domain": "shell",
+  "skills": [
+    {
+      "id": "shell_exec",
+      "name": "Execute Shell Command",
+      "mcp_tools": ["shell_exec"],
+      "status": "IMPLEMENTED",
+      "requires_device": true
+    }
+  ]
+}

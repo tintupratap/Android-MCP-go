@@ -1,0 +1,26 @@
+{
+  "domain": "ui",
+  "skills": [
+    {
+      "id": "ui_snapshot",
+      "name": "UI Layout Snapshot",
+      "mcp_tools": ["Snapshot", "ui_snapshot"],
+      "status": "PHYSICALLY VERIFIED",
+      "requires_device": true
+    },
+    {
+      "id": "click_by_selector",
+      "name": "Click By Selector",
+      "mcp_tools": ["ClickBySelector", "ui_click_selector"],
+      "status": "PHYSICALLY VERIFIED",
+      "requires_device": true
+    },
+    {
+      "id": "wait_for_element",
+      "name": "Wait For Element",
+      "mcp_tools": ["WaitForElement", "ui_wait_element"],
+      "status": "TESTED",
+      "requires_device": true
+    }
+  ]
+}

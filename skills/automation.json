@@ -1,0 +1,12 @@
+{
+  "domain": "automation",
+  "skills": [
+    {
+      "id": "workflow_execution",
+      "name": "Workflow Execution Engine",
+      "mcp_tools": [],
+      "status": "PLANNED",
+      "requires_device": true
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Android-MCP-go",
+  "version": "0.2.0",
+  "description": "Production-grade Go implementation of the Model Context Protocol server for Android operating systems",
+  "domains": [
+    { "id": "device", "file": "skills/device.json", "description": "Device management, discovery, and wireless bootstrap" },
+    { "id": "ui", "file": "skills/ui.json", "description": "UI hierarchy parsing, selectors, and element interaction" },
+    { "id": "screenshot", "file": "skills/screenshot.json", "description": "Screen capture and visual annotations" },
+    { "id": "input", "file": "skills/input.json", "description": "Touch gestures, text typing, and key events" },
+    { "id": "applications", "file": "skills/applications.json", "description": "Package listing, application launching, stopping, and package info" },
+    { "id": "filesystem", "file": "skills/filesystem.json", "description": "Android file push, pull, directory listing, and removal" },
+    { "id": "shell", "file": "skills/shell.json", "description": "ADB shell execution with context timeouts" },
+    { "id": "automation", "file": "skills/automation.json", "description": "Workflow execution and verification assertions" }
+  ]
+}
