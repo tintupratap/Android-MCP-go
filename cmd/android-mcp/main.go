@@ -19,7 +19,7 @@ import (
 	"github.com/tintupratap/Android-MCP-go/internal/scrcpy"
 )
 
-const Version = "0.2.0"
+const Version = "0.4.0"
 
 func main() {
 	// Check for subcommand arguments first (e.g. android-mcp doctor, android-mcp status, android-mcp platform-tools, android-mcp scrcpy)
@@ -58,18 +58,18 @@ func main() {
 	flag.StringVar(&usbFlag, "usb", "", "Use USB ADB. Optionally provide a specific device serial")
 	flag.BoolVar(&debugFlag, "debug", false, "Enable verbose debug logging and activity desktop notifications")
 	flag.BoolVar(&showVersion, "version", false, "Show version and exit")
-	flag.BoolVar(&showDoctor, "doctor", false, "Run diagnostic health check")
-	flag.BoolVar(&showStatus, "status", false, "Show concise device status and exit")
+	flag.BoolVar(&showDoctor, "doctor", false, "Run doctor diagnostic check and exit")
+	flag.BoolVar(&showStatus, "status", false, "Run status check and exit")
 	flag.Parse()
 
 	if showVersion {
 		fmt.Printf("Android-MCP-go v%s\n", Version)
-		os.Exit(0)
+		return
 	}
 
 	if showDoctor {
 		runDoctorCmd()
-		os.Exit(0)
+		return
 	}
 
 	if showStatus {
@@ -102,12 +102,22 @@ func main() {
 		}
 	}
 
+	// Ensure scrcpy is present if enabled
+	scrcpyMgr, errScrcpy := scrcpy.NewManager(notifier)
+	if errScrcpy == nil && os.Getenv("ANDROID_MCP_SCRCPY") != "false" {
+		if !scrcpyMgr.IsInstalled() {
+			_, errEnsureScrcpy := scrcpyMgr.Ensure(ctx)
+			if errEnsureScrcpy != nil {
+				logging.Warnf("scrcpy ensure warning: %v.", errEnsureScrcpy)
+			}
+		}
+	}
+
 	pref := resolvePreference(deviceFlag, connectionFlag, wifiFlag, usbFlag)
 
 	logging.Infof("Android-MCP-go v%s starting (connection=%s, source=%s, debug=%v)...", Version, pref.Connection, pref.Source, debugFlag)
 
 	adbClient := adb.NewClient("")
-	scrcpyMgr, _ := scrcpy.NewManager(notifier)
 	deviceMgr := device.NewDeviceManager(adbClient, notifier, pref, scrcpyMgr)
 
 	server := mcp.NewServer(deviceMgr, adbClient, os.Stdin, os.Stdout, actNotifier)
@@ -126,10 +136,14 @@ func runDoctorCmd() {
 	notifier := notification.NewNotifier()
 
 	ptMgr, _ := platformtools.NewManager(notifier)
-	if ptMgr != nil && ptMgr.IsInstalled() {
+	if ptMgr != nil {
+		_, _ = ptMgr.Ensure(ctx)
 		_ = os.Setenv("ANDROID_MCP_ADB", ptMgr.ADBPath())
 	}
 	scrcpyMgr, _ := scrcpy.NewManager(notifier)
+	if scrcpyMgr != nil && !scrcpyMgr.IsInstalled() {
+		_, _ = scrcpyMgr.Ensure(ctx)
+	}
 
 	adbClient := adb.NewClient("")
 	deviceMgr := device.NewDeviceManager(adbClient, notifier, device.DevicePreference{}, scrcpyMgr)

@@ -85,7 +85,6 @@ BINARY_TARGET="${INSTALL_DIR}/android-mcp"
 # 3. Build or Download Binary
 INSTALLED=0
 
-# Option A: Go build from source if go is installed
 if command -v go >/dev/null 2>&1; then
     log "Found Go compiler ($(go version)). Building from source..."
     TMP_DIR="$(mktemp -d)"
@@ -99,7 +98,6 @@ if command -v go >/dev/null 2>&1; then
     fi
 fi
 
-# Option B: Download binary release asset from GitHub Releases if Go build wasn't used
 if [ "$INSTALLED" -eq 0 ]; then
     log "Downloading prebuilt release from GitHub..."
     RELEASE_URL="https://github.com/tintupratap/Android-MCP-go/releases/latest/download/android-mcp-${OS}-${ARCH}"
@@ -117,23 +115,16 @@ fi
 chmod +x "$BINARY_TARGET"
 success "Binary installed to ${BINARY_TARGET}"
 
-# 4. Verify ADB Availability
-log "Verifying Android Debug Bridge (ADB)..."
-if command -v adb >/dev/null 2>&1; then
-    success "ADB binary found: $(command -v adb)"
-elif [ -f "$HOME/.scrcpy/adb" ]; then
-    success "ADB binary found in ~/.scrcpy/adb"
-elif [ -f "$HOME/Library/Android/sdk/platform-tools/adb" ]; then
-    success "ADB binary found in Android SDK platform-tools"
-else
-    warn "ADB is not currently found in PATH. Install Android Platform-Tools or scrcpy."
-fi
+# 4. Ensure Platform-Tools & scrcpy Display Mirror
+log "Ensuring official Android Platform-Tools..."
+"$BINARY_TARGET" platform-tools update >/dev/null 2>&1 || true
 
-# 5. Verification
+log "Ensuring official scrcpy display mirror..."
+"$BINARY_TARGET" scrcpy update >/dev/null 2>&1 || true
+
+# 5. Verification & Health Check
 log "Running installation health check..."
 if command -v android-mcp >/dev/null 2>&1 || [ -x "$BINARY_TARGET" ]; then
-    "$BINARY_TARGET" --version
-    echo ""
     "$BINARY_TARGET" doctor
     echo ""
     success "Android-MCP-go installation complete and verified!"

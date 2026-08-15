@@ -15,12 +15,13 @@ import (
 )
 
 type DoctorReport struct {
+	Version           string
 	ADBPath           string
 	ADBVersion        string
 	ADBServerRunning  bool
 	PlatformToolsPath string
 	PTManaged         bool
-	PTSource          string
+	PTInstalled       bool
 	ScrcpyPath        string
 	ScrcpyBinary      string
 	ScrcpyInstalled   bool
@@ -28,8 +29,6 @@ type DoctorReport struct {
 	ScrcpyRunning     bool
 	MCPConfigPath     string
 	MCPConfigStatus   string
-	ScrcpyConfigPath  string
-	ScrcpyStatus      string
 	USBDevices        []string
 	WiFiDevices       []string
 	SelectedDevice    *device.Device
@@ -40,6 +39,7 @@ type DoctorReport struct {
 	NotifySend        bool
 	ToolCount         int
 	IsHealthy         bool
+	ScrcpyErr         string
 }
 
 func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client, ptMgr *platformtools.DefaultManager, scrcpyMgr *scrcpy.Manager) *DoctorReport {
@@ -48,6 +48,7 @@ func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client,
 	}
 
 	rep := &DoctorReport{
+		Version:   "0.4.0",
 		ADBPath:   client.ADBPath(),
 		IsHealthy: true,
 		ToolCount: 23,
@@ -55,9 +56,8 @@ func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client,
 
 	if ptMgr != nil {
 		rep.PlatformToolsPath = ptMgr.Path()
-		rep.PTManaged = ptMgr.IsInstalled()
-		url, _ := platformtools.ResolveOfficialURL("darwin")
-		rep.PTSource = url
+		rep.PTInstalled = ptMgr.IsInstalled()
+		rep.PTManaged = rep.PTInstalled
 	}
 
 	if scrcpyMgr != nil {
@@ -67,6 +67,15 @@ func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client,
 		if rep.ScrcpyInstalled {
 			ver, _ := scrcpyMgr.GetVersion(ctx)
 			rep.ScrcpyVersion = ver
+		} else {
+			// Auto-attempt installation if missing
+			if _, err := scrcpyMgr.EnsureInstalled(ctx); err == nil {
+				rep.ScrcpyInstalled = true
+				ver, _ := scrcpyMgr.GetVersion(ctx)
+				rep.ScrcpyVersion = ver
+			} else {
+				rep.ScrcpyErr = err.Error()
+			}
 		}
 	}
 
@@ -90,22 +99,12 @@ func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client,
 	if err == nil {
 		rep.MCPConfigPath = mcpPath
 		if _, err := os.Stat(mcpPath); err == nil {
-			rep.MCPConfigStatus = "OK (~/.android-mcp/android-mcp.json)"
+			rep.MCPConfigStatus = "OK"
 		} else {
 			rep.MCPConfigStatus = "Not Created Yet"
 		}
 	} else {
 		rep.MCPConfigStatus = "Error"
-	}
-
-	scrcpyPath, err := config.GetScrcpyConfigPath()
-	if err == nil {
-		if _, err := os.Stat(scrcpyPath); err == nil {
-			rep.ScrcpyConfigPath = scrcpyPath
-			rep.ScrcpyStatus = "Legacy File Found (Imported into android-mcp.json)"
-		} else {
-			rep.ScrcpyStatus = "None (Independent)"
-		}
 	}
 
 	// 3. Device Discovery
@@ -123,7 +122,6 @@ func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client,
 			}
 		}
 
-		// Try resolving active target
 		dev, err := dm.Resolve(ctx)
 		if err == nil && dev != nil {
 			rep.SelectedDevice = dev
@@ -150,91 +148,63 @@ func RunDoctor(ctx context.Context, dm device.DeviceManager, client *adb.Client,
 func (r *DoctorReport) Format() string {
 	var sb strings.Builder
 
-	sb.WriteString("Android-MCP-Go Doctor\n")
-	sb.WriteString("=====================\n\n")
+	sb.WriteString(fmt.Sprintf("Android-MCP-go v%s\n\n", r.Version))
 
-	sb.WriteString("ADB:\n")
-	sb.WriteString(fmt.Sprintf("  Binary:  %s\n", r.ADBPath))
-	sb.WriteString(fmt.Sprintf("  Version: %s\n", r.ADBVersion))
-	serverState := "running"
-	if !r.ADBServerRunning {
-		serverState = "NOT running"
-	}
-	sb.WriteString(fmt.Sprintf("  Server:  %s\n\n", serverState))
+	sb.WriteString("Core:\n")
+	sb.WriteString("  ✓ MCP binary\n")
+	sb.WriteString(fmt.Sprintf("  ✓ Configuration (%s)\n\n", r.MCPConfigPath))
 
 	sb.WriteString("Platform-Tools:\n")
-	managedStr := "no"
-	if r.PTManaged {
-		managedStr = "yes (installed)"
-	}
-	sb.WriteString(fmt.Sprintf("  Managed: %s\n", managedStr))
-	if r.PlatformToolsPath != "" {
-		sb.WriteString(fmt.Sprintf("  Path:    %s\n", r.PlatformToolsPath))
-	}
-	sb.WriteString("  Source:  Official Android/Google\n\n")
-
-	sb.WriteString("scrcpy Screen Mirror:\n")
-	scrcpyState := "no"
-	if r.ScrcpyInstalled {
-		scrcpyState = "yes (installed)"
-	}
-	sb.WriteString(fmt.Sprintf("  Installed: %s\n", scrcpyState))
-	sb.WriteString(fmt.Sprintf("  Binary:    %s\n", r.ScrcpyBinary))
-	if r.ScrcpyVersion != "" {
-		sb.WriteString(fmt.Sprintf("  Version:   %s\n", r.ScrcpyVersion))
-	}
-	activeMirror := "no"
-	if r.ScrcpyRunning {
-		activeMirror = "yes (active display window)"
-	}
-	sb.WriteString(fmt.Sprintf("  Mirror:    %s\n\n", activeMirror))
-
-	sb.WriteString("Configuration:\n")
-	sb.WriteString(fmt.Sprintf("  android-mcp.json: %s (%s)\n", r.MCPConfigStatus, r.MCPConfigPath))
-	sb.WriteString(fmt.Sprintf("  scrcpy.json:      %s (%s)\n\n", r.ScrcpyStatus, r.ScrcpyConfigPath))
-
-	sb.WriteString("Devices:\n")
-	usbStr := fmt.Sprintf("%d detected", len(r.USBDevices))
-	if len(r.USBDevices) == 0 {
-		usbStr = "none detected"
-	}
-	wifiStr := fmt.Sprintf("%d connected", len(r.WiFiDevices))
-	if len(r.WiFiDevices) == 0 {
-		wifiStr = "none connected"
-	}
-	sb.WriteString(fmt.Sprintf("  USB:  %s\n", usbStr))
-	sb.WriteString(fmt.Sprintf("  WiFi: %s\n\n", wifiStr))
-
-	sb.WriteString("Selected Device:\n")
-	if r.SelectedDevice != nil {
-		sb.WriteString(fmt.Sprintf("  Model:    %s\n", r.DeviceModel))
-		sb.WriteString(fmt.Sprintf("  Serial:   %s\n", r.DeviceSerial))
-		sb.WriteString(fmt.Sprintf("  Endpoint: %s\n\n", r.Endpoint))
+	if r.PTInstalled {
+		sb.WriteString(fmt.Sprintf("  ✓ Installed (%s)\n", r.PlatformToolsPath))
 	} else {
-		sb.WriteString("  No target device currently resolved (Lazy Mode)\n\n")
+		sb.WriteString("  ✗ Platform-Tools missing\n")
+	}
+	sb.WriteString(fmt.Sprintf("  ✓ ADB executable (%s)\n", r.ADBPath))
+	if r.ADBServerRunning {
+		sb.WriteString(fmt.Sprintf("  ✓ ADB version (%s)\n\n", r.ADBVersion))
+	} else {
+		sb.WriteString("  ✗ ADB server not running\n\n")
+	}
+
+	sb.WriteString("scrcpy Display Mirror:\n")
+	if r.ScrcpyInstalled {
+		sb.WriteString(fmt.Sprintf("  ✓ Installed (%s)\n", r.ScrcpyPath))
+		sb.WriteString(fmt.Sprintf("  ✓ Executable valid (%s)\n", r.ScrcpyVersion))
+		mirrorState := "no"
+		if r.ScrcpyRunning {
+			mirrorState = fmt.Sprintf("running against %s", r.Endpoint)
+		}
+		sb.WriteString(fmt.Sprintf("  ✓ Active Mirror (%s)\n\n", mirrorState))
+	} else {
+		sb.WriteString("  ✗ scrcpy not installed\n")
+		if r.ScrcpyErr != "" {
+			sb.WriteString(fmt.Sprintf("  Reason: %s\n", r.ScrcpyErr))
+		}
+		sb.WriteString("\n")
+	}
+
+	sb.WriteString("Device:\n")
+	if r.SelectedDevice != nil {
+		sb.WriteString(fmt.Sprintf("  ✓ %s (%s %s)\n\n", r.DeviceModel, strings.ToUpper(r.SelectedDevice.Connection), r.Endpoint))
+	} else {
+		sb.WriteString("  - No active target device resolved (Lazy Mode)\n\n")
 	}
 
 	sb.WriteString("Notifications:\n")
-	tnStr := "available"
-	if !r.TerminalNotifier {
-		tnStr = "unavailable"
+	if r.TerminalNotifier {
+		sb.WriteString("  ✓ terminal-notifier (macOS)\n\n")
+	} else if r.NotifySend {
+		sb.WriteString("  ✓ notify-send (Linux)\n\n")
+	} else {
+		sb.WriteString("  - Standard system logger\n\n")
 	}
-	nsStr := "available"
-	if !r.NotifySend {
-		nsStr = "unavailable"
-	}
-	sb.WriteString(fmt.Sprintf("  terminal-notifier (macOS): %s\n", tnStr))
-	sb.WriteString(fmt.Sprintf("  notify-send (Linux):       %s\n\n", nsStr))
-
-	sb.WriteString("MCP:\n")
-	sb.WriteString("  Transport: stdio\n")
-	sb.WriteString(fmt.Sprintf("  Tools: %d registered\n\n", r.ToolCount))
 
 	statusStr := "HEALTHY"
-	if !r.IsHealthy {
-		statusStr = "UNHEALTHY"
-	} else if r.SelectedDevice == nil {
-		statusStr = "READY (Lazy Mode - No device currently active)"
+	if !r.IsHealthy || !r.ADBServerRunning {
+		statusStr = "UNHEALTHY — ADB server unavailable"
+	} else if !r.ScrcpyInstalled {
+		statusStr = "DEGRADED — MCP core functional, live screen view unavailable"
 	}
 	sb.WriteString(fmt.Sprintf("Status: %s\n", statusStr))
 

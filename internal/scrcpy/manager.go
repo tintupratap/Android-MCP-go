@@ -45,24 +45,21 @@ type GitHubRelease struct {
 	Assets     []GitHubReleaseAsset `json:"assets"`
 }
 
-type Platform struct {
-	OS   string
-	Arch string
-}
-
 type ResolvedAsset struct {
 	Name        string
 	URL         string
 	ChecksumURL string
 	Version     string
+	Size        int64
 }
 
 type Manager struct {
-	mu          sync.Mutex
-	baseDir     string
-	notifier    notification.Notifier
-	activeProcs map[string]*exec.Cmd
-	procsMu     sync.Mutex
+	mu           sync.Mutex
+	baseDir      string
+	notifier     notification.Notifier
+	activeProcs  map[string]*exec.Cmd
+	restartCount map[string]int
+	procsMu      sync.Mutex
 }
 
 func NewManager(notifier notification.Notifier) (*Manager, error) {
@@ -76,9 +73,10 @@ func NewManager(notifier notification.Notifier) (*Manager, error) {
 	baseDir := filepath.Join(home, ".android-mcp")
 
 	return &Manager{
-		baseDir:     baseDir,
-		notifier:    notifier,
-		activeProcs: make(map[string]*exec.Cmd),
+		baseDir:      baseDir,
+		notifier:     notifier,
+		activeProcs:  make(map[string]*exec.Cmd),
+		restartCount: make(map[string]int),
 	}, nil
 }
 
@@ -100,7 +98,7 @@ func (m *Manager) BinaryPath() string {
 		binName = "scrcpy.exe"
 	}
 
-	// 1. Managed path ~/.android-mcp/scrcpy/scrcpy (or subfolder containing executable)
+	// 1. Managed path ~/.android-mcp/scrcpy/scrcpy (or subfolder)
 	managedPath := m.Path()
 	var foundBin string
 	_ = filepath.Walk(managedPath, func(p string, info os.FileInfo, err error) error {
@@ -112,23 +110,6 @@ func (m *Manager) BinaryPath() string {
 	})
 	if foundBin != "" {
 		return foundBin
-	}
-
-	// 2. Fallback to system PATH candidates
-	candidates := []string{
-		"/opt/homebrew/bin/scrcpy",
-		"/usr/local/bin/scrcpy",
-		"/usr/bin/scrcpy",
-	}
-	for _, cand := range candidates {
-		if _, err := os.Stat(cand); err == nil {
-			return cand
-		}
-	}
-
-	p, err := exec.LookPath(binName)
-	if err == nil {
-		return p
 	}
 
 	return filepath.Join(managedPath, binName)
@@ -146,7 +127,7 @@ func (m *Manager) IsInstalled() bool {
 func (m *Manager) GetVersion(ctx context.Context) (string, error) {
 	binPath := m.BinaryPath()
 	if !m.IsInstalled() {
-		return "not installed", fmt.Errorf("scrcpy binary not found")
+		return "not installed", fmt.Errorf("scrcpy binary not found at %s", binPath)
 	}
 
 	cmd := exec.CommandContext(ctx, binPath, "--version")
@@ -163,7 +144,7 @@ func (m *Manager) GetVersion(ctx context.Context) (string, error) {
 	return "unknown", nil
 }
 
-func (m *Manager) Ensure(ctx context.Context) (string, error) {
+func (m *Manager) EnsureInstalled(ctx context.Context) (string, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -178,6 +159,10 @@ func (m *Manager) Ensure(ctx context.Context) (string, error) {
 	}
 
 	return m.DownloadAndInstallLocked(ctx)
+}
+
+func (m *Manager) Ensure(ctx context.Context) (string, error) {
+	return m.EnsureInstalled(ctx)
 }
 
 func FetchLatestRelease(ctx context.Context) (*GitHubRelease, error) {
@@ -258,7 +243,7 @@ func ResolveAssetForPlatform(rel *GitHubRelease, goos, goarch string) (*Resolved
 	}
 
 	if chosenAsset == nil {
-		return nil, fmt.Errorf("no suitable official release asset found for %s/%s in release %s", goos, goarch, rel.TagName)
+		return nil, fmt.Errorf("no official upstream scrcpy binary release available for %s/%s in release %s", goos, goarch, rel.TagName)
 	}
 
 	return &ResolvedAsset{
@@ -266,37 +251,41 @@ func ResolveAssetForPlatform(rel *GitHubRelease, goos, goarch string) (*Resolved
 		URL:         chosenAsset.BrowserDownloadURL,
 		ChecksumURL: checksumURL,
 		Version:     rel.TagName,
+		Size:        chosenAsset.Size,
 	}, nil
 }
 
 func (m *Manager) DownloadAndInstallLocked(ctx context.Context) (string, error) {
 	rel, err := FetchLatestRelease(ctx)
 	if err != nil {
-		logging.Warnf("Failed to fetch latest release from GitHub API: %v. Falling back to default download.", err)
+		logging.Warnf("Failed to fetch latest scrcpy release from GitHub API: %v", err)
+		_ = m.notifier.Notify("Android-MCP", "Failed to resolve official scrcpy release.")
 		return "", fmt.Errorf("scrcpy official release resolution failed: %w", err)
 	}
 
 	asset, err := ResolveAssetForPlatform(rel, runtime.GOOS, runtime.GOARCH)
 	if err != nil {
+		logging.Warnf("scrcpy platform resolution error: %v", err)
+		_ = m.notifier.Notify("Android-MCP", fmt.Sprintf("scrcpy not supported for %s/%s", runtime.GOOS, runtime.GOARCH))
 		return "", err
 	}
 
 	_ = m.notifier.Notify("Android-MCP", fmt.Sprintf("Downloading official scrcpy %s release...", asset.Version))
+	logging.Infof("Downloading official scrcpy %s release (%s) for %s/%s...", asset.Version, asset.Name, runtime.GOOS, runtime.GOARCH)
 
 	downloadsDir := m.DownloadsDir()
 	_ = os.MkdirAll(downloadsDir, 0755)
 	archivePath := filepath.Join(downloadsDir, asset.Name)
 	defer os.Remove(archivePath)
 
-	if err := downloadFile(ctx, asset.URL, archivePath); err != nil {
-		_ = m.notifier.Notify("Android-MCP", "Failed to download scrcpy package.")
+	if err := downloadFileWithProgress(ctx, asset.URL, archivePath, asset.Size); err != nil {
+		_ = m.notifier.Notify("Android-MCP", "Failed to download scrcpy.")
 		return "", fmt.Errorf("failed to download %s: %w", asset.URL, err)
 	}
 
-	// Optional Checksum Verification
 	if asset.ChecksumURL != "" {
 		if err := verifyChecksum(ctx, archivePath, asset.Name, asset.ChecksumURL); err != nil {
-			logging.Warnf("Checksum verification warning: %v", err)
+			logging.Warnf("Checksum verification note: %v", err)
 		} else {
 			logging.Infof("SHA-256 checksum verified for %s", asset.Name)
 		}
@@ -319,7 +308,6 @@ func (m *Manager) DownloadAndInstallLocked(ctx context.Context) (string, error) 
 		return "", fmt.Errorf("unsupported archive format: %s", asset.Name)
 	}
 
-	// Locate scrcpy executable in staging
 	binName := "scrcpy"
 	if runtime.GOOS == "windows" {
 		binName = "scrcpy.exe"
@@ -334,31 +322,26 @@ func (m *Manager) DownloadAndInstallLocked(ctx context.Context) (string, error) 
 	})
 
 	if stagedBin == "" {
-		return "", fmt.Errorf("extracted archive %s does not contain %s executable", asset.Name, binName)
+		return "", fmt.Errorf("extracted scrcpy package does not contain %s executable", binName)
 	}
 
-	// Make executable
 	_ = os.Chmod(stagedBin, 0755)
 
-	// Verify scrcpy --version execution
 	verCmd := exec.CommandContext(ctx, stagedBin, "--version")
 	if err := verCmd.Run(); err != nil {
-		return "", fmt.Errorf("downloaded scrcpy executable failed execution test: %w", err)
+		return "", fmt.Errorf("scrcpy executable --version check failed: %w", err)
 	}
 
-	// Atomic directory replacement
 	targetDir := m.Path()
 	_ = os.RemoveAll(targetDir)
 
-	// If root of staging contains single nested dir, move that dir; else move stagingDir
 	sourceDir := filepath.Dir(stagedBin)
 	if err := os.Rename(sourceDir, targetDir); err != nil {
-		return "", fmt.Errorf("failed to atomically install scrcpy: %w", err)
+		return "", fmt.Errorf("failed to install scrcpy to %s: %w", targetDir, err)
 	}
 
 	finalBin := m.BinaryPath()
 
-	// Update persistent metadata in ~/.android-mcp/android-mcp.json
 	cfg, errLoad := config.LoadConfig()
 	if errLoad == nil {
 		cfg.ManagedScrcpy = &config.ManagedScrcpyConfig{
@@ -423,7 +406,7 @@ func (m *Manager) Launch(ctx context.Context, serial string, title string) error
 	if cmd, ok := m.activeProcs[serial]; ok && cmd != nil && cmd.Process != nil {
 		if err := cmd.Process.Signal(syscall.Signal(0)); err == nil {
 			m.procsMu.Unlock()
-			logging.Debugf("scrcpy screen mirror process already running for device %s", serial)
+			logging.Debugf("scrcpy screen mirror process already active for device %s", serial)
 			return nil
 		}
 	}
@@ -502,7 +485,26 @@ func (m *Manager) StopAll() {
 	}
 }
 
-func downloadFile(ctx context.Context, url string, dest string) error {
+type progressWriter struct {
+	total      int64
+	downloaded int64
+	lastReport int
+}
+
+func (pw *progressWriter) Write(p []byte) (int, error) {
+	n := len(p)
+	pw.downloaded += int64(n)
+	if pw.total > 0 {
+		pct := int((float64(pw.downloaded) / float64(pw.total)) * 100)
+		if pct >= pw.lastReport+25 {
+			pw.lastReport = pct
+			logging.Infof("scrcpy download progress: %d%%", pct)
+		}
+	}
+	return n, nil
+}
+
+func downloadFileWithProgress(ctx context.Context, url string, dest string, totalSize int64) error {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return err
@@ -517,13 +519,23 @@ func downloadFile(ctx context.Context, url string, dest string) error {
 		return fmt.Errorf("HTTP %d downloading %s", resp.StatusCode, url)
 	}
 
+	if totalSize <= 0 && resp.ContentLength > 0 {
+		totalSize = resp.ContentLength
+	}
+
 	out, err := os.Create(dest)
 	if err != nil {
 		return err
 	}
 	defer out.Close()
 
-	_, err = io.Copy(out, resp.Body)
+	pw := &progressWriter{total: totalSize}
+	writer := io.MultiWriter(out, pw)
+
+	_, err = io.Copy(writer, resp.Body)
+	if err == nil {
+		logging.Infof("scrcpy download complete (100%%)")
+	}
 	return err
 }
 
