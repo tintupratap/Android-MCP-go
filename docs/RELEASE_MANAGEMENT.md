@@ -1,66 +1,61 @@
-# Dynamic scrcpy Release Management & Resolution
+# Dynamic Release Management & Resolution Guide
 
 > **Repository**: [https://github.com/tintupratap/Android-MCP-go](https://github.com/tintupratap/Android-MCP-go)  
 > **Author**: Ranapratap ([tintupratap@gmail.com](mailto:tintupratap@gmail.com))
 
-## Overview
+`Android-MCP-go` automatically manages Platform-Tools and `scrcpy` releases dynamically without requiring hardcoded URLs or manual binary updates.
 
-`Android-MCP-go` automatically manages its `scrcpy` binary installation under:
-```text
-~/.android-mcp/scrcpy/
-```
+---
 
-All release downloads originate exclusively from the official upstream project:
+## 1. Dynamic Release Resolution Pipeline
+
 ```text
-https://github.com/Genymobile/scrcpy
+Query GitHub API (api.github.com/repos/Genymobile/scrcpy/releases/latest)
+                               │
+                               ▼
+        Filter Out Drafts & Prereleases
+                               │
+                               ▼
+    Match Host Platform & Arch (runtime.GOOS & runtime.GOARCH)
+    ├── darwin/arm64  -> scrcpy-macos-aarch64-v*.tar.gz
+    ├── darwin/amd64  -> scrcpy-macos-x86_64-v*.tar.gz
+    ├── linux/amd64   -> scrcpy-linux-x86_64-v*.tar.gz
+    ├── windows/amd64 -> scrcpy-win64-v*.zip
+    └── windows/386   -> scrcpy-win32-v*.zip
+                               │
+                               ▼
+   Download Archive to ~/.android-mcp/.downloads/
+                               │
+                               ▼
+   Verify SHA-256 Digest Against Official Release Checksums
+                               │
+                               ▼
+   Extract Safely to ~/.android-mcp/.staging/scrcpy/
+   (Zip & Tar Slip Path Traversal Validation)
+                               │
+                               ▼
+   Verify Executable via `scrcpy --version` Staging Check
+                               │
+                               ▼
+   Atomic Directory Replacement to ~/.android-mcp/scrcpy/
 ```
 
 ---
 
-## Dynamic Release Resolution Pipeline
+## 2. Platform-Tools Management Pipeline
 
-```text
-Fetch GitHub Latest Release API (api.github.com/repos/Genymobile/scrcpy/releases/latest)
-                              │
-                              ▼
-        Filter out Drafts and Prereleases
-                              │
-                              ▼
-   Match Host Platform & Architecture (runtime.GOOS & runtime.GOARCH)
-   ├── darwin/arm64  -> scrcpy-macos-aarch64-v*.tar.gz
-   ├── darwin/amd64  -> scrcpy-macos-x86_64-v*.tar.gz
-   ├── linux/amd64   -> scrcpy-linux-x86_64-v*.tar.gz
-   ├── windows/amd64 -> scrcpy-win64-v*.zip
-   └── windows/386   -> scrcpy-win32-v*.zip
-                              │
-                              ▼
-  Download Archive to ~/.android-mcp/.downloads/
-                              │
-                              ▼
-  Verify SHA-256 Checksum (if published in release assets)
-                              │
-                              ▼
-  Safely Extract to ~/.android-mcp/.staging/scrcpy/
-  (Tar.gz & Zip with Zip Slip path traversal validation)
-                              │
-                              ▼
-  Verify Executable & Run `scrcpy --version`
-                              │
-                              ▼
-  Atomic Replacement to ~/.android-mcp/scrcpy/
-```
+Google Platform-Tools archives (`platform-tools-latest-*.zip`) are fetched from `dl.google.com`, validated with Zip Slip checks, tested via `adb version` in staging, and atomically installed into `~/.android-mcp/platform-tools/`.
 
 ---
 
-## CLI Management Subcommands
+## 3. CLI Release Management Commands
 
 ```bash
-# Check installed scrcpy version and running status
+# Check installed component status
+android-mcp platform-tools status
 android-mcp scrcpy status
 
-# Query GitHub Releases API & update to latest official release
+# Force update to latest official releases
+android-mcp platform-tools update
 android-mcp scrcpy update
-
-# Force reinstall scrcpy
-android-mcp scrcpy reinstall
 ```

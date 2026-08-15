@@ -3,44 +3,30 @@
 > **Repository**: [https://github.com/tintupratap/Android-MCP-go](https://github.com/tintupratap/Android-MCP-go)  
 > **Author**: Ranapratap ([tintupratap@gmail.com](mailto:tintupratap@gmail.com))
 
-## Overview
-
-`Android-MCP-go` includes a multi-tiered notification system designed to provide desktop awareness of lifecycle events and AI-agent actions without desktop notification spam.
+`Android-MCP-go` provides a non-intrusive desktop notification system that alerts users to major connection milestones and real-time AI agent actions without notification spam.
 
 ---
 
-## Notification Backends
+## 1. Cross-Platform Backends
 
-### macOS
-1. `terminal-notifier` (Primary - rich native desktop notifications)
-2. `osascript` (Fallback - built-in AppleScript notifications)
-3. Silent fallback (if both unavailable)
-
-### Linux
-1. `notify-send` (libnotify)
-2. Silent fallback (if unavailable)
-
-*Note: Notification failures never break core server operations or device connectivity.*
+- **macOS**: `terminal-notifier` (Primary rich notification backend) with `osascript` AppleScript fallback.
+- **Linux**: `notify-send` (`libnotify`).
+- **Resilience**: If no desktop notifier is installed, operations continue silently without error.
 
 ---
 
-## Notification Modes & Levels
+## 2. Notification Modes & Activity Queue
 
-- **Normal Mode (Default)**: Notifies only major lifecycle milestones:
-  - Platform-Tools downloading & installation completion.
-  - Wireless USB → WiFi ADB bootstrap success (`USB can now be disconnected`).
-  - Critical connection failures.
-- **Debug Mode (`--debug`)**: Generates real-time, rate-limited notifications for meaningful AI-agent actions (e.g. `AI: Clicked "Login"`, `AI: Launched com.example.app`, `AI: Captured Screenshot`).
-- **Silent Mode**: Disables desktop notifications.
-
----
-
-## Redaction & Security
-
-In `--debug` mode, activity notifications automatically sanitize sensitive text parameters (e.g., passwords, API tokens, sensitive shell command parameters) before sending to desktop notification displays.
+- **Normal Mode (Default)**: Emits notifications only for major lifecycle milestones:
+  - Dependency download / installation completion.
+  - USB $\to$ WiFi ADB bootstrap completion (`USB can be disconnected`).
+  - Connection error alerts.
+- **Debug Mode (`--debug`)**: Emits real-time alerts for AI-agent actions (`AI: Clicked Element`, `AI: Launched App`, `AI: Captured Screenshot`).
+- **Rate Limiting**: Async alert queue rate-limits alerts (default 250ms interval) to eliminate desktop notification spam.
 
 ---
 
-## Action Correlation & Forensic Logging
+## 3. Parameter Redaction & Action Correlation
 
-Each action receives a unique random action ID (e.g., `ACTION 8f4c2d`), correlating high-level desktop alerts with detailed structured debug log entries.
+- **Data Redaction**: Sensitive parameter fields (passwords, auth tokens, secret keys) are automatically sanitized before sending desktop notifications.
+- **Correlation IDs**: Each action generates a unique correlation ID (e.g. `ACTION 8f4c2d`) linking desktop alerts to detailed structured debug logs.

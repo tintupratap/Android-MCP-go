@@ -1,57 +1,45 @@
-# Android-MCP-go TODO Checklist
+# Android-MCP-go Technical Checklist
 
-## P0.5 — Fully Self-Contained Runtime
-- [x] Create centralized path resolver (`internal/config/paths.go`, `RuntimePaths`).
-- [x] Support `ANDROID_MCP_HOME` environment override.
-- [x] Eliminate all searches for `$ANDROID_HOME`, `$ANDROID_SDK_ROOT`, system `adb`, and `/usr/bin/adb`.
-- [x] `adb.Client` strictly uses `~/.android-mcp/platform-tools/adb`.
-- [x] `scrcpy.Manager` strictly uses `~/.android-mcp/scrcpy/scrcpy` and sets `ADB=~/.android-mcp/platform-tools/adb`.
-- [x] Environment isolation unit test `TestEnvironmentIsolation` passing.
-- [x] Clean machine verification and doctor output reporting `Android SDK: Required: no, Used: no`.
-- [x] `docs/SELF_CONTAINED.md` published.
+> **Repository**: [https://github.com/tintupratap/Android-MCP-go](https://github.com/tintupratap/Android-MCP-go)  
+> **Author**: Ranapratap ([tintupratap@gmail.com](mailto:tintupratap@gmail.com))
 
-## 1. Managed `scrcpy` & Live Screen Mirroring System
-- [x] Implement `internal/scrcpy` package.
-- [x] Managed directory under `~/.android-mcp/scrcpy/`.
-- [x] Dynamic GitHub Release resolution (`api.github.com/repos/Genymobile/scrcpy/releases/latest`).
-- [x] Host OS & architecture asset resolver (`darwin/arm64`, `darwin/amd64`, `linux/amd64`, `windows/amd64`, `windows/386`).
-- [x] SHA-256 checksum verification against official published checksum assets.
-- [x] Tar.gz and Zip archive extraction with Zip/Tar Slip path traversal protection.
-- [x] Atomic directory installation via `~/.android-mcp/.downloads/` and `~/.android-mcp/.staging/scrcpy/`.
-- [x] Non-blocking automatic launch of `scrcpy` live display mirror window upon device connection.
+---
+
+## 1. Core Architecture & Self-Contained Stack
+- [x] Portable path resolver (`RuntimePaths`) with `ANDROID_MCP_HOME` override.
+- [x] Strict elimination of fallback to host SDK (`ANDROID_HOME`, `ANDROID_SDK_ROOT`, system `adb`, `/usr/bin/adb`).
+- [x] `adb.Client` strictly executes `~/.android-mcp/platform-tools/adb`.
+- [x] `scrcpy.Manager` strictly executes `~/.android-mcp/scrcpy/scrcpy` with `ADB=~/.android-mcp/platform-tools/adb`.
+- [x] Environment isolation test (`TestEnvironmentIsolation`) passing 100%.
+
+## 2. Managed Platform-Tools (`internal/platformtools`)
+- [x] Official Google HTTPS download sources only (`dl.google.com`).
+- [x] Zip Slip path traversal security validation.
+- [x] Atomic directory installation via `~/.android-mcp/.staging/`.
+- [x] CLI `android-mcp platform-tools status|update`.
+
+## 3. Managed `scrcpy` & Live Display Mirroring (`internal/scrcpy`)
+- [x] Official GitHub Release asset resolver (`Genymobile/scrcpy`).
+- [x] Host OS/arch asset mapper (`darwin/arm64`, `darwin/amd64`, `linux/amd64`, `windows/amd64`, `windows/386`).
+- [x] SHA-256 integrity verification against release checksum assets.
+- [x] Tar/Zip Slip archive security validation.
+- [x] Atomic installation under `~/.android-mcp/scrcpy/`.
+- [x] Non-blocking background launch of `scrcpy` live display mirror window upon device connection.
 - [x] Duplicate window protection per device serial.
-- [x] CLI `android-mcp scrcpy status|update|reinstall|start|stop`.
+- [x] CLI `android-mcp scrcpy status|update|start|stop`.
 
-## 2. Unified Configuration & Independence
-- [x] Unified JSON schema in `~/.android-mcp/android-mcp.json`.
-- [x] One-time migration (`PerformOneTimeMigration`) importing legacy `~/.scrcpy/scrcpy.json` parameters.
-- [x] Total elimination of runtime dependency on `~/.scrcpy/scrcpy.json` and `scrcpy-wireless-go`.
-- [x] Atomic write persistence using temporary file replacement.
+## 4. Skills & Capability Manifests (`internal/skills`)
+- [x] Installed under `~/.android-mcp/skills/` (10 domain JSON manifests).
+- [x] CLI `android-mcp skills list` and `android-mcp skills install`.
+- [x] Embedded fallback manifests for offline/first-install bootstrap.
 
-## 3. Self-Contained Platform-Tools Management
-- [x] Implement `internal/platformtools` package.
-- [x] Managed directory under `~/.android-mcp/platform-tools/`.
-- [x] Official Android/Google URLs only (`dl.google.com/android/repository/platform-tools-latest-*.zip`).
-- [x] Zip Slip security validation during extraction.
-- [x] Atomic directory installation via `platform-tools.download/`.
-- [x] CLI `android-mcp platform-tools status|update|reinstall`.
+## 5. Diagnostic Health Suite & Notifications
+- [x] `android-mcp doctor` comprehensive diagnostic health report.
+- [x] `android-mcp status` fast operational check (Exit 0 / 1).
+- [x] Throttled `--debug` activity notification engine with rate-limiting and credential redaction.
 
-## 4. Debug Activity Notification System
-- [x] Throttled async activity notifier (`ActivityNotifier`).
-- [x] `--debug` flag triggers desktop activity notifications for AI actions.
-- [x] Automatic redaction of sensitive parameters (passwords, tokens, secrets).
-- [x] Rate-limiting queue (default 250ms interval) to prevent desktop notification spam.
-- [x] Unique action correlation IDs (`ACTION 8f4c2d`).
-
-## 5. Verification & Testing
-- [x] 100% pass rate on `go test ./...`.
-- [x] 100% pass rate on race detector `go test -race ./...` across all 14 packages.
-- [x] Physical hardware verification on Sony Xperia SOG09 across all 23 registered MCP tools via `python3 e2e_test.py`.
-
-## 6. GitHub Publication & Documentation
-- [x] `docs/PLATFORM_TOOLS.md`
-- [x] `docs/NOTIFICATIONS.md`
-- [x] `docs/SCRCPY.md`
-- [x] `docs/CONFIGURATION_MIGRATION.md`
-- [x] `docs/RELEASE_MANAGEMENT.md`
-- [x] `README.md`, `SKILLS.md`, `ARCHITECTURE.md`, `CONFIGURATION.md`, `SECURITY.md`, `DEVELOPMENT.md`, `ROADMAP.md`, `CHANGELOG.md`.
+## 6. Verification & Quality Assurance
+- [x] 100% unit test pass rate (`go test ./...`).
+- [x] 100% data race detector pass rate (`go test -race ./...`) across all 15 packages.
+- [x] Physical hardware E2E verification on Sony Xperia `SOG09` (`192.168.1.3:5555`) across all 23 MCP tools (`python3 e2e_test.py`).
+- [x] Clean one-line installer (`install.sh`) verified.

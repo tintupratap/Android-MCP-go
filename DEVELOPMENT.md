@@ -3,63 +3,65 @@
 > **Repository**: [https://github.com/tintupratap/Android-MCP-go](https://github.com/tintupratap/Android-MCP-go)  
 > **Author**: Ranapratap ([tintupratap@gmail.com](mailto:tintupratap@gmail.com))
 
-## Project Structure
+This guide outlines codebase structure, building, testing procedures, and guidelines for extending `Android-MCP-go`.
+
+---
+
+## 1. Project Directory Layout
 
 ```text
 Android-MCP-go/
-├── cmd/
-│   └── android-mcp/        # Main executable entry point & CLI flag parsing
+├── cmd/android-mcp/          # Main executable entry point & CLI flag/subcommand parser
 ├── internal/
-│   ├── adb/                # ADB runner, device parser, IP extraction logic
-│   ├── config/             # Atomic JSON persistence & scrcpy reader
-│   ├── device/             # DeviceManager, state machine, preference resolver
-│   ├── discovery/          # Multi-strategy IP discovery & TCP/IP bootstrap engine
-│   ├── logging/            # Structured level logger
-│   ├── mcp/                # JSON-RPC 2.0 stdio MCP server & 14 tool handlers
-│   ├── notification/       # macOS & Linux desktop notifier integration
-│   └── ui/                 # XML UI hierarchy parser, selectors, visual annotation
-├── docs/
-│   └── PORTING_ANALYSIS.md # Detailed archaeology & compatibility analysis
-├── e2e_test.py             # Physical hardware end-to-end test script
-├── ARCHITECTURE.md         # System architecture specification
-├── CONFIGURATION.md        # Persistent config documentation
-├── ROADMAP.md              # Project milestones & roadmap
-├── TODO.md                 # Technical task checklist
-├── go.mod                  # Go module definition
-├── go.sum                  # Go module checksums
-└── README.md               # User manual & quickstart
+│   ├── adb/                  # ADB client, device parser, shell & file transfer logic
+│   ├── config/               # Portable path resolver (RuntimePaths) & atomic JSON config
+│   ├── device/               # DeviceManager orchestrator & state machine
+│   ├── discovery/            # Wireless IP discovery & TCP/IP bootstrap engine
+│   ├── doctor/               # Comprehensive diagnostic health engine
+│   ├── logging/              # Level-based logger
+│   ├── mcp/                  # JSON-RPC 2.0 stdio transport & 23 MCP tool handlers
+│   ├── notification/         # Desktop notifier & --debug activity rate-limited alert queue
+│   ├── platformtools/        # Managed Google Platform-Tools installer with Zip Slip checks
+│   ├── scrcpy/               # Managed scrcpy GitHub release installer & display mirror manager
+│   ├── service/              # Decoupled service adapters mapping Android tools
+│   ├── skills/               # Machine-readable skill domain manifest manager
+│   └── ui/                   # UI hierarchy XML parser & visual PNG annotation engine
+├── docs/                     # Technical documentation & testing reports
+├── skills/                   # Domain capability JSON manifests (v0.4.0)
+├── e2e_test.py               # E2E JSON-RPC physical hardware verification harness
+├── install.sh                # One-line curl installation script
+├── go.mod                    # Module definition (github.com/tintupratap/Android-MCP-go)
+└── README.md                 # Project homepage & manual
 ```
 
 ---
 
-## Building & Testing
-
-### Build Executable
+## 2. Build & Test Commands
 
 ```bash
+# 1. Build local binary
 go build -o android-mcp ./cmd/android-mcp
-```
 
-### Run Unit Tests
+# 2. Run unit tests across all 15 packages
+go test ./...
 
-```bash
-go test -v ./...
-```
+# 3. Run data race detector across all packages
+go test -race ./...
 
-### Run Integration & Physical Verification Tests
+# 4. Run static code analysis
+go vet ./...
 
-```bash
+# 5. Run physical hardware E2E test suite (requires connected Android device)
 python3 e2e_test.py
 ```
 
-See [docs/TESTING_REPORT.md](docs/TESTING_REPORT.md) for full physical test specifications and benchmarks on Sony Xperia SOG09 hardware.
+See [docs/TESTING_REPORT.md](docs/TESTING_REPORT.md) for physical testing specifications and benchmarks on Sony Xperia `SOG09` hardware.
 
 ---
 
-## Adding New MCP Tools
+## 3. How to Add a New MCP Tool
 
-To add a new tool to `Android-MCP-go`:
-1. Open `internal/mcp/server.go`.
-2. Define the `Tool` schema in `s.registerTools()` (specifying `Name`, `Description`, `InputSchema`, and `Annotations`).
-3. Add the handler closure implementing the execution logic using `s.requireDevice(ctx)` or low-level ADB commands.
-4. Add unit/integration tests in `internal/mcp/mcp_test.go` and `e2e_test.py`.
+1. **Define Service Method**: Add method to corresponding service in `internal/service/` (e.g. `DeviceService`, `UIService`).
+2. **Register Tool Schema**: Add tool definition to `RegisterTools()` in `internal/mcp/server.go`.
+3. **Add JSON-RPC Handler**: Implement RPC handler in `internal/mcp/server.go` with parameter validation.
+4. **Update Manifests & Tests**: Update `skills/` JSON domain manifests, add unit test in `internal/mcp/mcp_test.go`, and add step in `e2e_test.py`.

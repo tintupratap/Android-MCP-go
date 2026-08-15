@@ -1,15 +1,15 @@
-# Android-MCP-go Architecture
+# Android-MCP-go System Architecture
 
 > **Repository**: [https://github.com/tintupratap/Android-MCP-go](https://github.com/tintupratap/Android-MCP-go)  
 > **Author**: Ranapratap ([tintupratap@gmail.com](mailto:tintupratap@gmail.com))
 
 ## Overview
 
-`Android-MCP-go` is a native Go implementation of the Android Model Context Protocol (MCP) server. It exposes mobile automation, screen vision, and device inspection capabilities to AI assistants via standard stdio JSON-RPC 2.0, featuring self-contained Platform-Tools management, managed `scrcpy` display mirroring, automatic wireless ADB bootstrapping, unified state persistence, and debug desktop notifications.
+`Android-MCP-go` is designed as a **decoupled, layered, 100% self-contained Go application**. All binary management, state persistence, discovery, and execution happen strictly under `~/.android-mcp/` (or `$ANDROID_MCP_HOME`).
 
 ---
 
-## 1. System Architecture Diagram
+## 1. System Layout & Data Flow
 
 ```text
                                ┌───────────────────────────┐
@@ -19,7 +19,7 @@
                                              │ stdio (JSON-RPC 2.0)
                                              ▼
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Android-MCP-go Server                                                                       │
+│ Android-MCP-go Server (~/.android-mcp/)                                                     │
 │                                                                                             │
 │   ┌─────────────────────────────────────────────────────────────────────────────────────┐   │
 │   │ internal/mcp (JSON-RPC Protocol Server & 23 Tool Handlers)                         │   │
@@ -44,98 +44,43 @@
 │          ▼                 ▼                  ▼                  ▼                          │
 │   ┌────────────────────────────────────────────────────────────────────────┐                │
 │   │ internal/platformtools (Managed SDK Platform-Tools / adb)              │                │
-│   │ internal/scrcpy        (Managed scrcpy Release & Display Mirror)       │                │
+│   │ internal/scrcpy        (Managed scrcpy Release & Display Window)       │                │
+│   │ internal/skills        (Machine-Readable Capability Manifests)         │                │
 │   └────────────────────────────────────────────────────────────────────────┘                │
 └─────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Core Package Responsibilities
+## 2. Package Responsibilities
 
-### `cmd/android-mcp/`
-Main executable entry point. Parses CLI flags (`--device`, `--connection`, `--debug`), handles subcommands (`doctor`, `status`, `platform-tools`, `scrcpy`), boots the MCP stdio server, and wires the `DeviceManager`.
-
-### `internal/config/`
-Manages persistent state in `~/.android-mcp/android-mcp.json` using atomic temporary file replacement. Implements one-time migration (`PerformOneTimeMigration`) for importing legacy `~/.scrcpy/scrcpy.json` parameters.
-
-### `internal/adb/`
-Provides safe, structured execution of ADB commands via direct argument slice execution (`exec.CommandContext`). Manages connections, shell commands, file transfers (`PushFile`, `PullFile`), screencaps, and property queries.
-
-### `internal/platformtools/`
-Self-contained Platform-Tools manager. Automatically downloads, verifies, and installs official Google Android SDK Platform-Tools under `~/.android-mcp/platform-tools/` with Zip Slip protection.
-
-### `internal/scrcpy/`
-Managed `scrcpy` engine. Queries official GitHub Releases API (`Genymobile/scrcpy`), resolves OS/arch release assets, verifies SHA-256 digests, safely extracts archives, and launches non-blocking screen mirror display windows.
-
-### `internal/discovery/`
-Wireless ADB bootstrap engine:
-- USB device detection.
-- Multi-strategy IP address discovery (`ip -4 addr show`, `ip route`, `dhcp.wlan0.ipaddress`).
-- TCP/IP mode setup (`adb tcpip 5555`).
-- Wireless connection verification.
-
-### `internal/device/`
-Defines `DeviceManager` interface and state machine (`NoDevice`, `USBDetected`, `BootstrappingWiFi`, `WiFiConnected`, `USBConnected`). Enforces precedence logic (`android-mcp.json` > Auto-pick).
-
-### `internal/service/`
-Decoupled service layer mapping Android capabilities to MCP adapters:
-- `DeviceService` (`ListDevices`, `ConnectDevice`, `Device`)
-- `InputService` (`Click`, `LongClick`, `Swipe`, `Drag`, `Type`, `Press`)
-- `UIService` (`Snapshot`, `ClickBySelector`, `WaitForElement`)
-- `AppService` (`list_apps`, `launch_app`, `stop_app`)
-- `FileService` (`file_push`, `file_pull`)
-- `ShellService` (`shell_exec`)
-
-### `internal/mcp/`
-JSON-RPC 2.0 stdio transport protocol handler. Registers all 23 MCP tools and aliases.
-
-### `internal/ui/`
-Parses UI hierarchy XML from `uiautomator dump`. Extracts interactive elements, builds bounding boxes, computes element center coordinates, and draws visual annotations on PNG screenshots.
-
-### `internal/skills/`
-Manages machine-readable skill manifests under `~/.android-mcp/skills/`. Installs, parses, and formats human/machine capability manifests across all 10 capability domains.
-
-### `internal/notification/`
-Cross-platform desktop notifier interface with rate-limited `--debug` activity notification engine (`ActivityNotifier`) and automatic secret redaction.
+| Package | Purpose & Responsibility |
+|---|---|
+| `cmd/android-mcp/` | Executable entry point. Handles CLI flags (`--device`, `--debug`), subcommands (`doctor`, `status`, `platform-tools`, `scrcpy`, `skills`), and stdio protocol server lifecycle. |
+| `internal/config/` | Portable path resolver (`RuntimePaths`) and unified JSON configuration (`android-mcp.json`) written via atomic file replacement. |
+| `internal/adb/` | Safe ADB client executing direct argument slices (`exec.CommandContext`). Performs shell commands, screencaps, and file transfers using managed `adb`. |
+| `internal/platformtools/` | Downloads, verifies, extracts, and manages official Google Platform-Tools under `~/.android-mcp/platform-tools/` with Zip Slip security checks. |
+| `internal/scrcpy/` | Resolves official GitHub releases (`Genymobile/scrcpy`), verifies SHA-256 digests, and manages non-blocking display mirror child processes. |
+| `internal/discovery/` | USB detection, IP resolution (`ip addr`, `ip route`), TCP/IP mode switching (`port 5555`), and wireless connection verification. |
+| `internal/device/` | `DeviceManager` state machine and precedence hierarchy (`android-mcp.json` > Auto-pick ADB device). |
+| `internal/service/` | Adapter layer mapping Android operations (`DeviceService`, `InputService`, `UIService`, `AppService`, `FileService`, `ShellService`) to MCP handlers. |
+| `internal/ui/` | Parses `uiautomator` XML hierarchies, computes element bounds, and generates visual annotated PNG screenshots. |
+| `internal/skills/` | Installs and parses 10 machine-readable skill JSON domain manifests under `~/.android-mcp/skills/`. |
+| `internal/notification/` | Cross-platform desktop notification engine with rate-limiting and sensitive credential redaction. |
+| `internal/mcp/` | Stdio JSON-RPC 2.0 transport handler registering all 23 MCP tools and aliases. |
 
 ---
 
-## 3. Persistent Configuration Schema (`~/.android-mcp/android-mcp.json`)
+## 3. Directory Layout (`~/.android-mcp/`)
 
-```json
-{
-  "version": 1,
-  "device": {
-    "last_ip": "192.168.1.3",
-    "serial": "QV771A3JEE",
-    "model": "SOG09",
-    "port": 5555,
-    "connection": "wifi"
-  },
-  "scrcpy": {
-    "enabled": true,
-    "auto_start": true,
-    "video_codec": "h265",
-    "video_bitrate": "4M",
-    "audio_source": "playback",
-    "stay_awake": true,
-    "render_driver": "metal"
-  },
-  "platform_tools": {
-    "managed": true,
-    "path": "~/.android-mcp/platform-tools",
-    "version": "1.0.41",
-    "source": "official-google"
-  },
-  "managed_scrcpy": {
-    "managed": true,
-    "path": "~/.android-mcp/scrcpy",
-    "release": "v4.1",
-    "source": "https://github.com/Genymobile/scrcpy"
-  },
-  "notifications": {
-    "enabled": true
-  }
-}
+```text
+~/.android-mcp/
+├── android-mcp.json         # Unified persistent state & preferences
+├── platform-tools/          # Managed Google Platform-Tools (adb, fastboot)
+├── scrcpy/                  # Managed Genymobile scrcpy bundle & executable
+├── skills/                  # Machine-readable capability manifests
+├── .downloads/              # Temporary download staging area
+├── .staging/                # Temporary archive extraction staging
+├── cache/                   # Runtime cache
+└── logs/                    # Operational logs
 ```

@@ -3,18 +3,17 @@
 > **Repository**: [https://github.com/tintupratap/Android-MCP-go](https://github.com/tintupratap/Android-MCP-go)  
 > **Author**: Ranapratap ([tintupratap@gmail.com](mailto:tintupratap@gmail.com))
 
-## Configuration Storage Location
+`Android-MCP-go` maintains unified state, device history, and mirroring preferences in a single JSON file:
 
-`Android-MCP-go` stores all state and preferences strictly under:
 ```text
 ~/.android-mcp/android-mcp.json
 ```
 
-All runtime dependencies on `~/.scrcpy/scrcpy.json` and external tools have been removed.
+(Configurable via `ANDROID_MCP_HOME`).
 
 ---
 
-## Unified Schema Reference (`android-mcp.json`)
+## 1. Unified JSON Schema Reference
 
 ```json
 {
@@ -35,7 +34,6 @@ All runtime dependencies on `~/.scrcpy/scrcpy.json` and external tools have been
     "video_bitrate": "4M",
     "audio_source": "playback",
     "audio_codec": "opus",
-    "audio_bitrate": "128K",
     "stay_awake": true,
     "render_driver": "metal"
   },
@@ -53,43 +51,37 @@ All runtime dependencies on `~/.scrcpy/scrcpy.json` and external tools have been
   },
   "notifications": {
     "enabled": true
-  },
-  "migration": {
-    "scrcpy_wireless_imported": true
   }
 }
 ```
 
-### Key Sections
+---
 
-- **`device`**: Most recently verified Android endpoint parameters (`last_ip`, `serial`, `model`, `port`, `connection`).
-- **`scrcpy`**: User video, audio, rendering driver, and display mirroring preferences.
-- **`platform_tools`**: Installation metadata for managed Google Android SDK Platform-Tools.
-- **`managed_scrcpy`**: Release metadata for managed Genymobile `scrcpy` binary installation.
-- **`notifications`**: Desktop notification settings.
-- **`migration`**: Tracks one-time migration status for importing legacy `~/.scrcpy/scrcpy.json` values.
+## 2. Configuration Parameters
+
+| Section | Field | Description | Default |
+|---|---|---|---|
+| `device` | `last_ip` | Last verified WiFi IP address | Auto-discovered |
+| `device` | `serial` | Last connected device serial | Auto-discovered |
+| `device` | `connection` | Preferred connection type (`wifi`, `usb`, `auto`) | `auto` |
+| `scrcpy` | `enabled` | Enable managed scrcpy support | `true` |
+| `scrcpy` | `auto_start` | Automatically launch display window on device connection | `true` |
+| `scrcpy` | `video_codec` | Video encoding codec (`h264`, `h265`, `av1`) | `h265` |
+| `scrcpy` | `video_bitrate` | Stream bit rate | `4M` |
+| `scrcpy` | `stay_awake` | Keep device screen awake while mirroring | `true` |
 
 ---
 
-## Precedence Hierarchy
+## 3. Precedence Hierarchy
 
-```text
-CLI Arguments (--device, --connection)
-       ↓
-Environment Variables (ANDROID_MCP_DEVICE, ANDROID_MCP_CONNECTION, ANDROID_MCP_HOST)
-       ↓
-Unified Persistent State (~/.android-mcp/android-mcp.json)
-       ↓
-Automatic Device Discovery (Physical USB -> WiFi Bootstrap -> Physical WiFi -> Emulator)
-```
+1. **Explicit CLI Flags**: `--device 192.168.1.3:5555 --connection wifi`
+2. **Environment Variables**: `ANDROID_MCP_DEVICE`, `ANDROID_MCP_HOST`
+3. **Persistent State**: `~/.android-mcp/android-mcp.json` (`device.last_ip`)
+4. **Auto-Pick Discovery**: First available active ADB device.
 
 ---
 
-## Atomic File Persistence
+## 4. Atomic Persistence & One-Time Migration
 
-All configuration file writes use **atomic temporary file replacement**:
-1. Marshal JSON in memory.
-2. Write content to temporary file `~/.android-mcp/android-mcp.json.tmp`.
-3. Atomically replace destination via `os.Rename`.
-
-This guarantees that power interrupts or unexpected terminations never leave a corrupt zero-byte configuration file.
+- **Atomic Writes**: Saved using temporary file writes (`android-mcp.json.tmp.*`) followed by atomic rename to prevent corruption.
+- **One-Time Migration**: On first boot, if legacy `~/.scrcpy/scrcpy.json` is detected, preferences are automatically imported into `~/.android-mcp/android-mcp.json`.
