@@ -512,6 +512,45 @@ func (s *Server) registerTools() {
 		return textResult(fmt.Sprintf("Dragged from (%d,%d) and dropped on (%d,%d)", x1, y1, x2, y2)), nil
 	})
 
+	// 10b. Pinch
+	s.registerTool(Tool{
+		Name:        "Pinch",
+		Description: "Perform a multi-touch pinch gesture (zoom in or zoom out)",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"x1": map[string]interface{}{"type": "integer"},
+				"y1": map[string]interface{}{"type": "integer"},
+				"x2": map[string]interface{}{"type": "integer"},
+				"y2": map[string]interface{}{"type": "integer"},
+				"x3": map[string]interface{}{"type": "integer"},
+				"y3": map[string]interface{}{"type": "integer"},
+				"x4": map[string]interface{}{"type": "integer"},
+				"y4": map[string]interface{}{"type": "integer"},
+			},
+			"required": []string{"x1", "y1", "x2", "y2", "x3", "y3", "x4", "y4"},
+		},
+		Annotations: &ToolAnnotations{Title: "Pinch", DestructiveHint: true},
+	}, func(ctx context.Context, args map[string]interface{}) (*CallToolResult, error) {
+		dev, err := s.requireDevice(ctx)
+		if err != nil {
+			return errorResult(err.Error()), nil
+		}
+		x1, _ := getIntArg(args, "x1")
+		y1, _ := getIntArg(args, "y1")
+		x2, _ := getIntArg(args, "x2")
+		y2, _ := getIntArg(args, "y2")
+		x3, _ := getIntArg(args, "x3")
+		y3, _ := getIntArg(args, "y3")
+		x4, _ := getIntArg(args, "x4")
+		y4, _ := getIntArg(args, "y4")
+
+		if err := s.services.Input.Pinch(ctx, dev.Serial, x1, y1, x2, y2, x3, y3, x4, y4, 500); err != nil {
+			return errorResult(err.Error()), nil
+		}
+		return textResult(fmt.Sprintf("Pinched pointer 1 (%d,%d)->(%d,%d) and pointer 2 (%d,%d)->(%d,%d)", x1, y1, x2, y2, x3, y3, x4, y4)), nil
+	})
+
 	// 11. Press
 	s.registerTool(Tool{
 		Name:        "Press",

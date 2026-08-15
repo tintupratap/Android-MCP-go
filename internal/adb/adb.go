@@ -389,14 +389,31 @@ func (c *Client) Drag(ctx context.Context, serial string, x1, y1, x2, y2, durati
 		}
 	}
 
-	_, err := c.ExecuteShell(ctx, serial, "input", "draganddrop",
+	_, _ = c.ExecuteShell(ctx, serial, "input", "draganddrop",
 		fmt.Sprintf("%d", x1), fmt.Sprintf("%d", y1),
 		fmt.Sprintf("%d", x2), fmt.Sprintf("%d", y2),
 		fmt.Sprintf("%d", durationMs))
-	if err == nil {
-		return nil
-	}
 	return c.Swipe(ctx, serial, x1, y1, x2, y2, durationMs)
+}
+
+func (c *Client) Pinch(ctx context.Context, serial string, x1, y1, x2, y2, x3, y3, x4, y4, durationMs int) error {
+	if durationMs <= 0 {
+		durationMs = 500
+	}
+	if err := c.ensureHelperDex(ctx, serial); err == nil {
+		out, err := c.ExecuteShell(ctx, serial,
+			"app_process", "-Djava.class.path=/data/local/tmp/mcp-helper.dex", "/data/local/tmp",
+			"com.android.mcp.HelperMain", "pinch",
+			fmt.Sprintf("%d", x1), fmt.Sprintf("%d", y1),
+			fmt.Sprintf("%d", x2), fmt.Sprintf("%d", y2),
+			fmt.Sprintf("%d", x3), fmt.Sprintf("%d", y3),
+			fmt.Sprintf("%d", x4), fmt.Sprintf("%d", y4),
+			fmt.Sprintf("%d", durationMs))
+		if err == nil && strings.Contains(out, "MCP_PINCH_SUCCESS") {
+			return nil
+		}
+	}
+	return fmt.Errorf("pinch gesture failed")
 }
 
 func (c *Client) SendKeys(ctx context.Context, serial string, text string) error {
