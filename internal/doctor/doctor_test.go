@@ -14,7 +14,7 @@ func TestDoctorAndStatus(t *testing.T) {
 	}
 
 	formatted := rep.Format()
-	if !strings.Contains(formatted, "Android-MCP-Go Doctor") {
+	if !strings.Contains(formatted, "Android-MCP-go v") {
 		t.Fatalf("unexpected doctor format output: %s", formatted)
 	}
 

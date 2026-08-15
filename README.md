@@ -160,6 +160,18 @@ Returns concise status with exit code `0` (Ready) or `1` (Not Ready):
 android-mcp status
 ```
 
+### Machine-Readable Skills System (`skills`)
+
+Manage and inspect installed capability manifests under `~/.android-mcp/skills/`:
+
+```bash
+# List all 10 capability domains and installed skills
+android-mcp skills list
+
+# Re-sync / install machine-readable skills manifests
+android-mcp skills install
+```
+
 ### Managed Platform-Tools Commands (`platform-tools`)
 
 ```bash
@@ -168,6 +180,22 @@ android-mcp platform-tools status
 
 # Force update platform-tools to latest official Google release
 android-mcp platform-tools update
+```
+
+### Managed scrcpy Display Mirror Commands (`scrcpy`)
+
+```bash
+# Check scrcpy status
+android-mcp scrcpy status
+
+# Force update scrcpy to latest official GitHub release
+android-mcp scrcpy update
+
+# Manually launch screen mirror window for connected device
+android-mcp scrcpy start
+
+# Stop active screen mirror windows
+android-mcp scrcpy stop
 ```
 
 ### Environment Variables
@@ -257,8 +285,12 @@ android-mcp platform-tools update
 - [CONFIGURATION.md](CONFIGURATION.md) — Persistent state schema & discovery hierarchy.
 - [SECURITY.md](SECURITY.md) — Download source policies, Zip Slip protection & argument safety.
 - [DEVELOPMENT.md](DEVELOPMENT.md) — Development workflow, testing, benchmarks, and E2E suite.
+- [docs/TESTING_REPORT.md](docs/TESTING_REPORT.md) — Complete hardware & software testing report.
+- [docs/SELF_CONTAINED.md](docs/SELF_CONTAINED.md) — 100% self-contained runtime architecture guide.
+- [docs/SCRCPY.md](docs/SCRCPY.md) — Managed scrcpy & live display mirror documentation.
 - [docs/PLATFORM_TOOLS.md](docs/PLATFORM_TOOLS.md) — Self-contained platform-tools manager documentation.
 - [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md) — Desktop notification engine & `--debug` activity system.
+- [docs/CONFIGURATION_MIGRATION.md](docs/CONFIGURATION_MIGRATION.md) — Unified state schema & one-time migration guide.
 - [CHANGELOG.md](CHANGELOG.md) — Version release notes.
 
 ---

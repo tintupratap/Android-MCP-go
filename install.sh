@@ -115,12 +115,15 @@ fi
 chmod +x "$BINARY_TARGET"
 success "Binary installed to ${BINARY_TARGET}"
 
-# 4. Ensure Platform-Tools & scrcpy Display Mirror
+# 4. Ensure Platform-Tools, scrcpy Display Mirror & Skills
 log "Ensuring official Android Platform-Tools..."
 "$BINARY_TARGET" platform-tools update >/dev/null 2>&1 || true
 
 log "Ensuring official scrcpy display mirror..."
 "$BINARY_TARGET" scrcpy update >/dev/null 2>&1 || true
+
+log "Ensuring machine-readable skills manifests..."
+"$BINARY_TARGET" skills install >/dev/null 2>&1 || true
 
 # 5. Verification & Health Check
 log "Running installation health check..."

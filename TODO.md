@@ -1,5 +1,15 @@
 # Android-MCP-go TODO Checklist
 
+## P0.5 — Fully Self-Contained Runtime
+- [x] Create centralized path resolver (`internal/config/paths.go`, `RuntimePaths`).
+- [x] Support `ANDROID_MCP_HOME` environment override.
+- [x] Eliminate all searches for `$ANDROID_HOME`, `$ANDROID_SDK_ROOT`, system `adb`, and `/usr/bin/adb`.
+- [x] `adb.Client` strictly uses `~/.android-mcp/platform-tools/adb`.
+- [x] `scrcpy.Manager` strictly uses `~/.android-mcp/scrcpy/scrcpy` and sets `ADB=~/.android-mcp/platform-tools/adb`.
+- [x] Environment isolation unit test `TestEnvironmentIsolation` passing.
+- [x] Clean machine verification and doctor output reporting `Android SDK: Required: no, Used: no`.
+- [x] `docs/SELF_CONTAINED.md` published.
+
 ## 1. Managed `scrcpy` & Live Screen Mirroring System
 - [x] Implement `internal/scrcpy` package.
 - [x] Managed directory under `~/.android-mcp/scrcpy/`.

@@ -17,12 +17,13 @@ import (
 	"github.com/tintupratap/Android-MCP-go/internal/notification"
 	"github.com/tintupratap/Android-MCP-go/internal/platformtools"
 	"github.com/tintupratap/Android-MCP-go/internal/scrcpy"
+	"github.com/tintupratap/Android-MCP-go/internal/skills"
 )
 
 const Version = "0.4.0"
 
 func main() {
-	// Check for subcommand arguments first (e.g. android-mcp doctor, android-mcp status, android-mcp platform-tools, android-mcp scrcpy)
+	// Check for subcommand arguments first (e.g. android-mcp doctor, android-mcp status, android-mcp platform-tools, android-mcp scrcpy, android-mcp skills)
 	if len(os.Args) > 1 {
 		subcmd := strings.ToLower(os.Args[1])
 		switch subcmd {
@@ -37,6 +38,9 @@ func main() {
 			os.Exit(0)
 		case "scrcpy":
 			runScrcpyCmd(os.Args[2:])
+			os.Exit(0)
+		case "skills":
+			runSkillsCmd(os.Args[2:])
 			os.Exit(0)
 		}
 	}
@@ -355,5 +359,34 @@ func normalizeConn(val string) string {
 		return val
 	default:
 		return "auto"
+	}
+}
+
+func runSkillsCmd(args []string) {
+	ctx := context.Background()
+	skillsMgr, err := skills.NewManager()
+	if err != nil {
+		fmt.Printf("Error initializing skills manager: %v\n", err)
+		os.Exit(1)
+	}
+
+	action := "list"
+	if len(args) > 0 {
+		action = strings.ToLower(args[0])
+	}
+
+	switch action {
+	case "install", "update", "ensure":
+		fmt.Println("Ensuring Android-MCP-go machine-readable skills...")
+		if err := skillsMgr.EnsureSkills(ctx); err != nil {
+			fmt.Printf("❌ Failed to install skills: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("✓ Skills ready at %s\n", skillsMgr.SkillsDir())
+	case "list", "status":
+		_ = skillsMgr.EnsureSkills(ctx)
+		fmt.Print(skillsMgr.ListSkills())
+	default:
+		fmt.Printf("Unknown skills subcommand: %s. Use list or install.\n", action)
 	}
 }

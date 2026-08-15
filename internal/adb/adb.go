@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tintupratap/Android-MCP-go/internal/config"
 	"github.com/tintupratap/Android-MCP-go/internal/logging"
 )
 
@@ -62,41 +63,21 @@ func FindADBPath() string {
 		}
 	}
 
+	paths, err := config.GetRuntimePaths()
+	if err == nil && paths != nil {
+		return paths.ADB
+	}
+
 	home, err := os.UserHomeDir()
 	if err == nil {
 		managedADB := filepath.Join(home, ".android-mcp", "platform-tools", "adb")
 		if runtime.GOOS == "windows" {
-			managedADB = filepath.Join(home, ".android-mcp", "platform-tools", "adb.exe")
+			managedADB += ".exe"
 		}
-		if _, err := os.Stat(managedADB); err == nil {
-			return managedADB
-		}
-		scrcpyADB := filepath.Join(home, ".scrcpy", "adb")
-		if _, err := os.Stat(scrcpyADB); err == nil {
-			return scrcpyADB
-		}
-		sdkADB := filepath.Join(home, "Library", "Android", "sdk", "platform-tools", "adb")
-		if _, err := os.Stat(sdkADB); err == nil {
-			return sdkADB
-		}
+		return managedADB
 	}
 
-	candidates := []string{
-		"/opt/homebrew/bin/adb",
-		"/usr/local/bin/adb",
-		"/usr/bin/adb",
-	}
-	for _, cand := range candidates {
-		if _, err := os.Stat(cand); err == nil {
-			return cand
-		}
-	}
-
-	p, err := exec.LookPath("adb")
-	if err == nil {
-		return p
-	}
-	return "adb"
+	return filepath.Join(".android-mcp", "platform-tools", "adb")
 }
 
 func (c *Client) runCmd(ctx context.Context, args ...string) (string, error) {

@@ -432,6 +432,11 @@ func (m *Manager) Launch(ctx context.Context, serial string, title string) error
 	cmd.Stdout = nil
 	cmd.Stderr = nil
 
+	paths, errPaths := config.GetRuntimePaths()
+	if errPaths == nil && paths != nil {
+		cmd.Env = append(os.Environ(), "ADB="+paths.ADB)
+	}
+
 	if err := cmd.Start(); err != nil {
 		logging.Warnf("Failed to launch scrcpy process: %v", err)
 		return fmt.Errorf("failed to launch scrcpy: %w", err)

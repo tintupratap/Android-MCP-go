@@ -1,6 +1,7 @@
 package adb
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -63,5 +64,23 @@ func TestFormatWiFiSerial(t *testing.T) {
 	}
 	if got := FormatWiFiSerial("192.168.1.5:5555", 5555); got != "192.168.1.5:5555" {
 		t.Errorf("expected 192.168.1.5:5555, got %q", got)
+	}
+}
+
+func TestEnvironmentIsolation(t *testing.T) {
+	tempHome := t.TempDir()
+	t.Setenv("HOME", tempHome)
+	t.Setenv("ANDROID_MCP_HOME", tempHome)
+	t.Setenv("PATH", "/usr/bin:/bin")
+	t.Setenv("ANDROID_HOME", "/nonexistent/sdk")
+	t.Setenv("ANDROID_SDK_ROOT", "/nonexistent/sdk_root")
+
+	adbPath := FindADBPath()
+	if !strings.HasPrefix(adbPath, tempHome) {
+		t.Fatalf("expected ADB path inside ANDROID_MCP_HOME (%s), got: %s", tempHome, adbPath)
+	}
+
+	if strings.Contains(adbPath, "nonexistent") || strings.Contains(adbPath, "/usr/bin") {
+		t.Fatalf("FindADBPath fell back to host SDK or PATH! Path: %s", adbPath)
 	}
 }

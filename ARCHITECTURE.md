@@ -93,6 +93,9 @@ JSON-RPC 2.0 stdio transport protocol handler. Registers all 23 MCP tools and al
 ### `internal/ui/`
 Parses UI hierarchy XML from `uiautomator dump`. Extracts interactive elements, builds bounding boxes, computes element center coordinates, and draws visual annotations on PNG screenshots.
 
+### `internal/skills/`
+Manages machine-readable skill manifests under `~/.android-mcp/skills/`. Installs, parses, and formats human/machine capability manifests across all 10 capability domains.
+
 ### `internal/notification/`
 Cross-platform desktop notifier interface with rate-limited `--debug` activity notification engine (`ActivityNotifier`) and automatic secret redaction.
 

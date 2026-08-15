@@ -52,6 +52,8 @@ go test -v ./...
 python3 e2e_test.py
 ```
 
+See [docs/TESTING_REPORT.md](docs/TESTING_REPORT.md) for full physical test specifications and benchmarks on Sony Xperia SOG09 hardware.
+
 ---
 
 ## Adding New MCP Tools

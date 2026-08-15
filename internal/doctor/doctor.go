@@ -156,21 +156,28 @@ func (r *DoctorReport) Format() string {
 
 	sb.WriteString("Platform-Tools:\n")
 	if r.PTInstalled {
-		sb.WriteString(fmt.Sprintf("  ✓ Installed (%s)\n", r.PlatformToolsPath))
+		sb.WriteString(fmt.Sprintf("  ✓ Managed (yes: %s)\n", r.PlatformToolsPath))
 	} else {
 		sb.WriteString("  ✗ Platform-Tools missing\n")
 	}
-	sb.WriteString(fmt.Sprintf("  ✓ ADB executable (%s)\n", r.ADBPath))
+	sb.WriteString(fmt.Sprintf("  ✓ ADB Binary (%s)\n", r.ADBPath))
 	if r.ADBServerRunning {
-		sb.WriteString(fmt.Sprintf("  ✓ ADB version (%s)\n\n", r.ADBVersion))
+		sb.WriteString(fmt.Sprintf("  ✓ ADB Version (%s)\n", r.ADBVersion))
 	} else {
-		sb.WriteString("  ✗ ADB server not running\n\n")
+		sb.WriteString("  ✗ ADB server not running\n")
 	}
+	sb.WriteString("  ✓ Source (Official Google Platform-Tools)\n\n")
+
+	sb.WriteString("Android SDK:\n")
+	sb.WriteString("  Required: no\n")
+	sb.WriteString("  Used:     no (managed Platform-Tools only)\n\n")
 
 	sb.WriteString("scrcpy Display Mirror:\n")
 	if r.ScrcpyInstalled {
-		sb.WriteString(fmt.Sprintf("  ✓ Installed (%s)\n", r.ScrcpyPath))
-		sb.WriteString(fmt.Sprintf("  ✓ Executable valid (%s)\n", r.ScrcpyVersion))
+		sb.WriteString(fmt.Sprintf("  ✓ Managed (yes: %s)\n", r.ScrcpyPath))
+		sb.WriteString(fmt.Sprintf("  ✓ Executable (%s)\n", r.ScrcpyBinary))
+		sb.WriteString(fmt.Sprintf("  ✓ Version (%s)\n", r.ScrcpyVersion))
+		sb.WriteString("  ✓ Source (https://github.com/Genymobile/scrcpy)\n")
 		mirrorState := "no"
 		if r.ScrcpyRunning {
 			mirrorState = fmt.Sprintf("running against %s", r.Endpoint)
