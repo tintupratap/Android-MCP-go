@@ -39,7 +39,10 @@ Android-MCP-go/
 ## 2. Build & Test Commands
 
 ```bash
-# 1. Build local binary
+# 1. Install via Go package manager
+go install github.com/tintupratap/Android-MCP-go/cmd/android-mcp@latest
+
+# 2. Build local binary
 go build -o android-mcp ./cmd/android-mcp
 
 # 2. Run unit tests across all 15 packages

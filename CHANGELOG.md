@@ -10,6 +10,8 @@ All notable changes to **Android-MCP-go** are documented in this file. Format fo
 ## [0.4.0] - 2026-08-15
 
 ### Added
+- **Native Go Package Manager Installation (`go install`)**:
+  - Added official Go package installation path: `go install github.com/tintupratap/Android-MCP-go/cmd/android-mcp@latest`.
 - **Single-Instance Live View Enforcement & Always-On-Top (`internal/scrcpy/launcher.go` & `profile.go`)**:
   - Added `--always-on-top` default argument to `scrcpy` live view window launcher so the device display window stays visible above other desktop applications.
   - Eliminated duplicate `scrcpy` launch calls in `DeviceManager` so all launches pass through `EnsureRunning`.

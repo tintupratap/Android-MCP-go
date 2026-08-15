@@ -12,7 +12,9 @@ It empowers AI assistants (**Claude Desktop**, **Cursor IDE**, **Windsurf**, **A
 
 ---
 
-## ⚡ Quick Start (1-Line Installation)
+## ⚡ Installation Methods
+
+### Option 1: 1-Line Automated Installer (Recommended)
 
 Install `android-mcp` automatically on **macOS** or **Linux** with a single command:
 
@@ -20,8 +22,25 @@ Install `android-mcp` automatically on **macOS** or **Linux** with a single comm
 curl -fsSL https://raw.githubusercontent.com/tintupratap/Android-MCP-go/main/install.sh | bash
 ```
 
-The installer automatically installs:
-1. `android-mcp` binary to `/usr/local/bin/android-mcp`.
+### Option 2: Install via `go install`
+
+If you have Go installed on your system, you can install directly via Go Package Manager:
+
+```bash
+go install github.com/tintupratap/Android-MCP-go/cmd/android-mcp@latest
+```
+
+### Option 3: Build From Source
+
+```bash
+git clone https://github.com/tintupratap/Android-MCP-go.git
+cd Android-MCP-go
+go build -o android-mcp ./cmd/android-mcp
+sudo cp android-mcp /usr/local/bin/
+```
+
+The installation automatically initializes:
+1. `android-mcp` binary available in your system `PATH`.
 2. Official **Google Android SDK Platform-Tools** (`adb`) into `~/.android-mcp/platform-tools/`.
 3. Official **Genymobile `scrcpy`** display mirror into `~/.android-mcp/scrcpy/`.
 4. Machine-readable **Skill Manifests** into `~/.android-mcp/skills/`.
