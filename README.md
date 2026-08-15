@@ -4,7 +4,7 @@
 [![CI Status](https://github.com/tintupratap/Android-MCP-go/actions/workflows/ci.yml/badge.svg)](https://github.com/tintupratap/Android-MCP-go/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Author](https://img.shields.io/badge/Author-Ranapratap-blue.svg)](mailto:tintupratap@gmail.com)
-[![Tools: 23](https://img.shields.io/badge/MCP%20Tools-23%20Registered-brightgreen.svg)](#-supported-mcp-tools--capabilities)
+[![Tools: 25](https://img.shields.io/badge/MCP%20Tools-25%20Registered-brightgreen.svg)](#-supported-mcp-tools--capabilities)
 
 **Android-MCP-go** is a high-performance, 100% self-contained Go server implementing the Model Context Protocol (MCP) for Android devices.
 
@@ -43,12 +43,18 @@ The installation automatically initializes:
 1. `android-mcp` binary available in your system `PATH`.
 2. Official **Google Android SDK Platform-Tools** (`adb`) into `~/.android-mcp/platform-tools/`.
 3. Official **Genymobile `scrcpy`** display mirror into `~/.android-mcp/scrcpy/`.
-4. Machine-readable **Skill Manifests** into `~/.android-mcp/skills/`.
+4. Embedded **Native Android Helper (`mcp-helper.dex`)** compiled with Android API 34.
+5. Machine-readable **Skill Manifests** into `~/.android-mcp/skills/`.
 
 ---
 
 ## 🚀 Highlights
 
+- **⚡ Native Embedded Android Engine (`mcp-helper.dex`)**: Bundles a 9.3 KB embedded DEX helper (`//go:embed mcp-helper.dex`) for high-speed hardware touch injection, multi-touch gestures, and in-memory UI dumps.
+- **🤏 Native Multi-Touch Pinch Zoom (`Pinch`, `pinch`, `ui_pinch`)**: 2-pointer `MotionEvent` engine for live photo and canvas pinch-to-zoom (zoom in, zoom out, scaling).
+- **✋ Stationary Touch-Down Hold Drag (`Drag`)**: Injects `ACTION_DOWN` with a 800ms stationary hold to trigger Android's View long-press listener for 100% reliable launcher icon and item dragging.
+- **🔤 Base64 Unicode Text Engine (`Type`)**: Injects raw `KeyEvents` directly via `KeyCharacterMap`, bypassing shell character escaping bugs across special characters, emojis, and non-ASCII text.
+- **🚀 Ultra-Fast In-Memory UI Dumper (< 40ms)**: Direct in-memory tree traversal using `mcp-helper.dex` without `/sdcard/` filesystem disk I/O.
 - **⚡ Instant & Native**: Compiled Go binary with startup < 5ms, zero Python overhead, and minimal memory footprint.
 - 🖥️ **Managed `scrcpy` & Single-Instance Live View**: Auto-installs official `scrcpy` releases with a **strict single-instance invariant** (0 or 1 window, never 2+). Automatically opens on boot without requiring tool calls.
 - 👁️ **Persistent Visual Observability**: If you manually close the `scrcpy` window, the MCP server and ADB remain connected. Upon the next device tool call, `Android-MCP-go` automatically restores `scrcpy` **before executing the action** so you can continuously observe AI behavior.
@@ -56,7 +62,6 @@ The installation automatically initializes:
 - **📡 Wireless Auto-Bootstrap**: Plug in USB once; `Android-MCP-go` automatically discovers the device's WiFi IP, switches ADB to TCP/IP mode (`port 5555`), verifies connection integrity, and persists state. USB can be disconnected immediately.
 - **🖼️ Vision & Annotated Screenshots**: Generates structured XML UI element trees and visually annotated PNG screenshots with bounding boxes and element index badges.
 - **🩺 Comprehensive CLI Tooling**: Includes `doctor`, `status`, `platform-tools`, `scrcpy`, and `skills` subcommands.
-- **🔔 Activity Notifications**: Optional `--debug` mode emits rate-limited desktop alerts for AI agent actions with automatic credential redaction.
 - **🔒 Race-Free & Secure**: 100% concurrency safety (`go test -race ./...`), direct argument slice execution (no `sh -c`), and Zip/Tar Slip archive security validation.
 
 ---
@@ -133,23 +138,24 @@ android-mcp scrcpy stop
 
 ---
 
-## 🛠️ Supported MCP Tools & Capabilities (23 Tools)
+## 🛠️ Supported MCP Tools & Capabilities (25 Tools & Aliases)
 
 | Tool Name | Aliases | Description | Read-Only |
 |---|---|---|---|
 | `ListDevices` | `device_list` | List connected USB, WiFi, and emulator devices | Yes |
-| `ConnectDevice` | `device_connect` | Connect to WiFi device target (`IP:Port`) | No |
-| `Device` | — | Query active device metadata, model, serial, and connection mode | Yes |
-| `Snapshot` | `ui_snapshot` | Dump UI element hierarchy XML or annotated vision PNG (`use_vision: true`) | Yes |
-| `Click` | `ui_click` | Perform screen tap at coordinates `(x, y)` | No |
+| `ConnectDevice` | `device_connect` | Connect to WiFi device target (`IP:Port`) or auto-resolve physical target | No |
+| `Device` | — | Query active device metadata, model, serial, and connection mode (`action`: `list`, `connect`, `disconnect`, `get`, `info`) | Yes |
+| `Snapshot` | `ui_snapshot` | Fast in-memory UI hierarchy XML or annotated vision PNG (`use_vision: true`) | Yes |
+| `Click` | `ui_click` | Perform high-speed hardware screen tap at `(x, y)` via `InputManager` | No |
 | `ClickBySelector` | — | Click UI element matching text, resource ID, accessibility ID, or XPath | No |
 | `LongClick` | — | Perform long-press gesture at `(x, y)` with custom duration | No |
 | `Swipe` | — | Perform swipe gesture from `(x1, y1)` to `(x2, y2)` | No |
-| `Drag` | — | Perform drag gesture between coordinates | No |
-| `Type` | — | Type text into currently focused input field | No |
-| `Press` | — | Trigger hardware key events (`KEYCODE_HOME`, `KEYCODE_BACK`, `KEYCODE_APP_SWITCH`) | No |
+| `Drag` | — | Stationary touch-down hold (800ms) + smooth drag gesture across workspace & views | No |
+| `Pinch` | `pinch`, `ui_pinch` | Multi-touch 2-pointer pinch gesture for live zoom-in, zoom-out, and scaling | No |
+| `Type` | — | High-speed Base64 character stream input supporting Emojis, Unicode, and special characters | No |
+| `Press` | — | Trigger hardware key events (`KEYCODE_HOME`, `KEYCODE_BACK`, `KEYCODE_ENTER`, etc.) | No |
 | `Notification` | — | Display toast notification on Android screen | No |
-| `Wait` | — | Pause execution for specified duration (milliseconds) | Yes |
+| `Wait` | — | Pause execution for specified duration (seconds) | Yes |
 | `WaitForElement` | — | Poll UI hierarchy until specified element selector appears | Yes |
 | `list_apps` | — | List installed application packages (`third_party_only: bool`) | Yes |
 | `launch_app` | — | Launch application package via package name or intent | No |

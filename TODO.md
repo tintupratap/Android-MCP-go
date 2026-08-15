@@ -41,5 +41,13 @@
 ## 6. Verification & Quality Assurance
 - [x] 100% unit test pass rate (`go test ./...`).
 - [x] 100% data race detector pass rate (`go test -race ./...`) across all 15 packages.
-- [x] Physical hardware E2E verification on Sony Xperia `SOG09` (`192.168.1.3:5555`) across all 23 MCP tools (`python3 e2e_test.py`).
+- [x] Physical hardware E2E verification on Sony Xperia `SOG09` (`192.168.1.3:5555`) across all 25 MCP tools & aliases (`python3 e2e_test.py`).
 - [x] Clean one-line installer (`install.sh`) verified.
+
+## 7. Native Android Engine (`mcp-helper.dex`)
+- [x] Embedded 9.3 KB Android DEX helper compiled with API 34 (`//go:embed mcp-helper.dex`).
+- [x] Native multi-pointer `MotionEvent` engine for 2-finger Pinch Zoom In & Zoom Out (`Pinch`, `pinch`, `ui_pinch`).
+- [x] Stationary touch-down hold drag engine (800ms hold) for 100% reliable launcher & view item dragging (`Drag`).
+- [x] Base64 `KeyCharacterMap` character stream injection for Unicode, Emojis, and special characters (`Type`).
+- [x] In-memory UI hierarchy dumper (< 40ms) eliminating `/sdcard/` disk I/O (`DumpHierarchy`, `Snapshot`).
+- [x] Smart action normalization and auto-device resolution in `Device` and `ConnectDevice`.

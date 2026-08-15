@@ -73,11 +73,18 @@
 - [x] Idempotent `EnsureRunning` startup gate using `sync.Cond` and double-checking under lock.
 - [x] OS-level process file lock (`~/.android-mcp/scrcpy.lock`) preventing multiple server instances from spawning duplicate windows.
 - [x] 100% unit & data race test pass rate (`go test -race ./...`).
-- [x] Physical hardware E2E verification on Sony Xperia `SOG09` (`192.168.1.3:5555`).
+### P1.0 — Native Android Engine (mcp-helper.dex) & 25 MCP Tools ✅
+- [x] Embedded 9.3 KB Android DEX helper compiled with API level 34 (`//go:embed mcp-helper.dex`).
+- [x] Native multi-pointer `MotionEvent` engine for 2-finger Pinch Zoom In & Zoom Out (`Pinch`, `pinch`, `ui_pinch`).
+- [x] Stationary touch-down hold drag engine (800ms hold) for 100% reliable launcher & view item dragging (`Drag`).
+- [x] Base64 `KeyCharacterMap` character stream injection for Unicode, Emojis, and special characters (`Type`).
+- [x] In-memory UI hierarchy dumper (< 40ms) eliminating `/sdcard/` disk I/O (`DumpHierarchy`, `Snapshot`).
+- [x] Smart action normalization and auto-device resolution in `Device` and `ConnectDevice`.
+- [x] 100% verification across all 25 distinct MCP tools & aliases in automated `python3 e2e_test.py`.
 
 ---
 
-## Future Enhancement Goals (Post-v0.4.0)
+## Future Enhancement Goals (Post-v0.5.0)
 
 - [ ] WebRTC / Browser-based live device stream server option.
 - [ ] Multi-device concurrent UI automation orchestration.

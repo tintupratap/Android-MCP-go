@@ -13,13 +13,13 @@ This guide outlines codebase structure, building, testing procedures, and guidel
 Android-MCP-go/
 ├── cmd/android-mcp/          # Main executable entry point & CLI flag/subcommand parser
 ├── internal/
-│   ├── adb/                  # ADB client, device parser, shell & file transfer logic
+│   ├── adb/                  # ADB client, mcp-helper.dex, shell & file transfer logic
 │   ├── config/               # Portable path resolver (RuntimePaths) & atomic JSON config
 │   ├── device/               # DeviceManager orchestrator & state machine
 │   ├── discovery/            # Wireless IP discovery & TCP/IP bootstrap engine
 │   ├── doctor/               # Comprehensive diagnostic health engine
 │   ├── logging/              # Level-based logger
-│   ├── mcp/                  # JSON-RPC 2.0 stdio transport & 23 MCP tool handlers
+│   ├── mcp/                  # JSON-RPC 2.0 stdio transport & 25 MCP tool handlers
 │   ├── notification/         # Desktop notifier & --debug activity rate-limited alert queue
 │   ├── platformtools/        # Managed Google Platform-Tools installer with Zip Slip checks
 │   ├── scrcpy/               # Managed scrcpy GitHub release installer & display mirror manager

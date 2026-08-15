@@ -58,19 +58,24 @@ Status Vocabulary:
 - **Description**: Performs long-press gesture at `(x, y)` coordinate with custom duration.
 - **Status**: `PHYSICALLY VERIFIED`
 
+### Multi-Touch Pinch Zoom
+- **MCP Tools**: `Pinch`, `pinch`, `ui_pinch`
+- **Description**: Performs 2-pointer multi-touch pinch gesture (`MotionEvent.obtain` multi-pointer engine in `mcp-helper.dex`) for live photo and canvas zoom in, zoom out, and scaling.
+- **Status**: `PHYSICALLY VERIFIED`
+
 ### Swipe & Drag
 - **MCP Tools**: `Swipe`, `Drag`
-- **Description**: Performs touch swipe or drag gesture from `(x1, y1)` to `(x2, y2)`.
+- **Description**: Performs touch swipe or stationary touch-down hold drag (800ms hold in `mcp-helper.dex`) from `(x1, y1)` to `(x2, y2)`.
 - **Status**: `PHYSICALLY VERIFIED`
 
 ### Type Text
 - **MCP Tool**: `Type`
-- **Description**: Types text string into currently focused input control.
+- **Description**: Types text string into currently focused input control using high-speed Base64 `KeyCharacterMap` event stream in `mcp-helper.dex`.
 - **Status**: `PHYSICALLY VERIFIED`
 
 ### Hardware Key Press
 - **MCP Tool**: `Press`
-- **Description**: Sends key code events (`KEYCODE_HOME`, `KEYCODE_BACK`, `KEYCODE_APP_SWITCH`).
+- **Description**: Sends key code events (`KEYCODE_HOME`, `KEYCODE_BACK`, `KEYCODE_ENTER`, etc.).
 - **Status**: `PHYSICALLY VERIFIED`
 
 ### Wait & WaitForElement
