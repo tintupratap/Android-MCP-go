@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	_ "embed"
+	"encoding/base64"
 	"fmt"
 	"os"
 	"os/exec"
@@ -325,7 +326,38 @@ func (c *Client) Screencap(ctx context.Context, serial string) ([]byte, error) {
 	return data, nil
 }
 
+//go:embed mcp-helper.dex
+var helperDexBytes []byte
+
+func (c *Client) ensureHelperDex(ctx context.Context, serial string) error {
+	remotePath := "/data/local/tmp/mcp-helper.dex"
+	out, err := c.ExecuteShell(ctx, serial, "ls", remotePath)
+	if err == nil && strings.Contains(out, "mcp-helper.dex") {
+		return nil
+	}
+	tmpFile, err := os.CreateTemp("", "mcp-helper-*.dex")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmpFile.Name())
+	if _, err := tmpFile.Write(helperDexBytes); err != nil {
+		tmpFile.Close()
+		return err
+	}
+	tmpFile.Close()
+	return c.PushFile(ctx, serial, tmpFile.Name(), remotePath)
+}
+
 func (c *Client) Tap(ctx context.Context, serial string, x, y int) error {
+	if err := c.ensureHelperDex(ctx, serial); err == nil {
+		out, err := c.ExecuteShell(ctx, serial,
+			"app_process", "-Djava.class.path=/data/local/tmp/mcp-helper.dex", "/data/local/tmp",
+			"com.android.mcp.HelperMain", "tap",
+			fmt.Sprintf("%d", x), fmt.Sprintf("%d", y))
+		if err == nil && strings.Contains(out, "MCP_TAP_SUCCESS") {
+			return nil
+		}
+	}
 	_, err := c.ExecuteShell(ctx, serial, "input", "tap", fmt.Sprintf("%d", x), fmt.Sprintf("%d", y))
 	return err
 }
@@ -341,40 +373,18 @@ func (c *Client) Swipe(ctx context.Context, serial string, x1, y1, x2, y2, durat
 	return err
 }
 
-//go:embed drag.dex
-var dragDexBytes []byte
-
-func (c *Client) ensureDragDex(ctx context.Context, serial string) error {
-	remotePath := "/data/local/tmp/drag.dex"
-	out, err := c.ExecuteShell(ctx, serial, "ls", remotePath)
-	if err == nil && strings.Contains(out, "drag.dex") {
-		return nil
-	}
-	tmpFile, err := os.CreateTemp("", "drag-*.dex")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(tmpFile.Name())
-	if _, err := tmpFile.Write(dragDexBytes); err != nil {
-		tmpFile.Close()
-		return err
-	}
-	tmpFile.Close()
-	return c.PushFile(ctx, serial, tmpFile.Name(), remotePath)
-}
-
 func (c *Client) Drag(ctx context.Context, serial string, x1, y1, x2, y2, durationMs int) error {
 	if durationMs <= 0 {
 		durationMs = 1000
 	}
-	if err := c.ensureDragDex(ctx, serial); err == nil {
+	if err := c.ensureHelperDex(ctx, serial); err == nil {
 		out, err := c.ExecuteShell(ctx, serial,
-			"app_process", "-Djava.class.path=/data/local/tmp/drag.dex", "/data/local/tmp",
-			"com.android.mcp.DragMain",
+			"app_process", "-Djava.class.path=/data/local/tmp/mcp-helper.dex", "/data/local/tmp",
+			"com.android.mcp.HelperMain", "drag",
 			fmt.Sprintf("%d", x1), fmt.Sprintf("%d", y1),
 			fmt.Sprintf("%d", x2), fmt.Sprintf("%d", y2),
 			fmt.Sprintf("%d", durationMs))
-		if err == nil && strings.Contains(out, "DRAG_SUCCESS") {
+		if err == nil && (strings.Contains(out, "MCP_DRAG_SUCCESS") || strings.Contains(out, "DRAG_SUCCESS")) {
 			return nil
 		}
 	}
@@ -390,6 +400,16 @@ func (c *Client) Drag(ctx context.Context, serial string, x1, y1, x2, y2, durati
 }
 
 func (c *Client) SendKeys(ctx context.Context, serial string, text string) error {
+	if err := c.ensureHelperDex(ctx, serial); err == nil {
+		b64Text := base64.StdEncoding.EncodeToString([]byte(text))
+		out, err := c.ExecuteShell(ctx, serial,
+			"app_process", "-Djava.class.path=/data/local/tmp/mcp-helper.dex", "/data/local/tmp",
+			"com.android.mcp.HelperMain", "type", b64Text)
+		if err == nil && strings.Contains(out, "MCP_TYPE_SUCCESS") {
+			return nil
+		}
+	}
+
 	// Escape special characters for adb shell input text
 	escaped := strings.ReplaceAll(text, " ", "%s")
 	escaped = strings.ReplaceAll(escaped, "&", "\\&")
