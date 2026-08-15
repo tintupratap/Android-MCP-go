@@ -14,9 +14,11 @@ import (
 	"time"
 
 	"github.com/tintupratap/Android-MCP-go/internal/adb"
+	"github.com/tintupratap/Android-MCP-go/internal/config"
 	"github.com/tintupratap/Android-MCP-go/internal/device"
 	"github.com/tintupratap/Android-MCP-go/internal/logging"
 	"github.com/tintupratap/Android-MCP-go/internal/notification"
+	"github.com/tintupratap/Android-MCP-go/internal/scrcpy"
 	"github.com/tintupratap/Android-MCP-go/internal/service"
 	"github.com/tintupratap/Android-MCP-go/internal/ui"
 )
@@ -29,6 +31,7 @@ type Server struct {
 	adbClient     *adb.Client
 	services      *service.Services
 	actNotifier   notification.ActivityNotifier
+	liveViewMgr   *scrcpy.LiveViewManager
 	tools         map[string]Tool
 	handlers      map[string]ToolHandler
 	reader        *bufio.Reader
@@ -59,6 +62,12 @@ func NewServer(dm device.DeviceManager, client *adb.Client, in io.Reader, out io
 	return s
 }
 
+func (s *Server) SetLiveViewManager(lvm *scrcpy.LiveViewManager) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.liveViewMgr = lvm
+}
+
 func (s *Server) requireDevice(ctx context.Context) (*device.Device, error) {
 	dev, err := s.deviceManager.Resolve(ctx)
 	if err != nil {
@@ -77,6 +86,17 @@ func (s *Server) requireDevice(ctx context.Context) (*device.Device, error) {
 		}
 		return nil, fmt.Errorf("No device configured. Use --device flag, --wifi, --usb, or ANDROID_MCP_DEVICE.%s (%v)", availMsg, err)
 	}
+
+	if s.liveViewMgr != nil {
+		if errLV := s.liveViewMgr.EnsureLiveView(ctx); errLV != nil {
+			logging.Warnf("EnsureLiveView warning: %v", errLV)
+			appCfg, errCfg := config.LoadConfig()
+			if errCfg == nil && appCfg != nil && appCfg.Scrcpy.RequireLiveView {
+				return nil, fmt.Errorf("Live view could not be restored; action was not executed: %w", errLV)
+			}
+		}
+	}
+
 	return dev, nil
 }
 

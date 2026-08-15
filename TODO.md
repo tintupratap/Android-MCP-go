@@ -18,15 +18,15 @@
 - [x] Atomic directory installation via `~/.android-mcp/.staging/`.
 - [x] CLI `android-mcp platform-tools status|update`.
 
-## 3. Managed `scrcpy` & Live Display Mirroring (`internal/scrcpy`)
+## 3. Managed `scrcpy` & Adaptive Live View Engine (`internal/scrcpy`)
 - [x] Official GitHub Release asset resolver (`Genymobile/scrcpy`).
 - [x] Host OS/arch asset mapper (`darwin/arm64`, `darwin/amd64`, `linux/amd64`, `windows/amd64`, `windows/386`).
 - [x] SHA-256 integrity verification against release checksum assets.
-- [x] Tar/Zip Slip archive security validation.
-- [x] Atomic installation under `~/.android-mcp/scrcpy/`.
-- [x] Non-blocking background launch of `scrcpy` live display mirror window upon device connection.
+- [x] Capability probing engine (`DetectBinaryCapabilities`, `DetectHostCapabilities`, `DetectDeviceCapabilities`).
+- [x] Progressive degradation fallback pipeline (`Optimized` $\to$ `Reduced` $\to$ `H.264 Fallback` $\to$ `No Audio` $\to$ `Minimal Safe`).
+- [x] CLI `android-mcp scrcpy capabilities` & `android-mcp scrcpy profile`.
 - [x] Duplicate window protection per device serial.
-- [x] CLI `android-mcp scrcpy status|update|start|stop`.
+- [x] Non-blocking launch of `scrcpy` live display mirror window upon device connection.
 
 ## 4. Skills & Capability Manifests (`internal/skills`)
 - [x] Installed under `~/.android-mcp/skills/` (10 domain JSON manifests).

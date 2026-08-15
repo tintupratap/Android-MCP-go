@@ -10,10 +10,19 @@ All notable changes to **Android-MCP-go** are documented in this file. Format fo
 ## [0.4.0] - 2026-08-15
 
 ### Added
-- **100% Self-Contained Runtime Architecture**:
+- **Single-Instance Live View Enforcement & Always-On-Top (`internal/scrcpy/launcher.go` & `profile.go`)**:
+  - Added `--always-on-top` default argument to `scrcpy` live view window launcher so the device display window stays visible above other desktop applications.
+  - Eliminated duplicate `scrcpy` launch calls in `DeviceManager` so all launches pass through `EnsureRunning`.
+  - Implemented monotonic generation tracking (`generation uint64`) preventing stale process exit callbacks from clearing active state.
+  - Implemented singleflight startup gate (`sync.Cond` + double-check under lock) ensuring concurrent callers share a single launch.
+  - Implemented OS-level file lock (`~/.android-mcp/scrcpy.lock`) preventing multiple server instances from opening duplicate display windows.
   - Eliminated all runtime dependencies on host Android SDKs (`ANDROID_HOME`, `ANDROID_SDK_ROOT`), system `adb`, system `fastboot`, system `scrcpy`, or host package managers.
   - Centralized path resolver `RuntimePaths` supporting custom `ANDROID_MCP_HOME` root override.
   - Added unit test `TestEnvironmentIsolation` verifying zero host SDK path leakage.
+- **Adaptive scrcpy Engine & Progressive Degradation (`internal/scrcpy`)**:
+  - Probes binary (`scrcpy --help`), host OS (`darwin` Metal renderer), and device capabilities.
+  - Dynamically resolves optimal profiles (`auto`) with progressive degradation fallback (`Optimized` $\to$ `Reduced` $\to$ `H.264 Fallback` $\to$ `No Audio` $\to$ `Minimal Safe`).
+  - Subcommands: `android-mcp scrcpy capabilities` and `android-mcp scrcpy profile`.
 - **Managed `scrcpy` & Live Display Mirroring (`internal/scrcpy`)**:
   - Dynamically resolves latest official GitHub Releases (`Genymobile/scrcpy`).
   - SHA-256 integrity verification, Tar/Zip Slip archive security protection, and atomic installation under `~/.android-mcp/scrcpy/`.

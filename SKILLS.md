@@ -121,8 +121,8 @@ Status Vocabulary:
 - **Status**: `PHYSICALLY VERIFIED`
 
 ### Managed `scrcpy` Live Screen Mirror
-- **CLI Commands**: `android-mcp scrcpy [status|update|start|stop]`
-- **Description**: Self-contained display mirroring engine under `~/.android-mcp/scrcpy/` downloading official GitHub releases (`Genymobile/scrcpy`) and auto-launching screen windows.
+- **CLI Commands**: `android-mcp scrcpy [status|update|start|stop|capabilities|profile]`
+- **Description**: Self-contained display mirroring engine under `~/.android-mcp/scrcpy/` with **always-on-top** display mode (`--always-on-top`), **single-instance invariant** (max 1 window), adaptive platform-optimized profile resolution (Metal on macOS, H.265/H.264), and automatic tool-call relaunching (`EnsureLiveView`).
 - **Status**: `PHYSICALLY VERIFIED`
 
 ### Machine-Readable Skills Manifests

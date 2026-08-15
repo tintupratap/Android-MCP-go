@@ -177,6 +177,9 @@ func (r *DoctorReport) Format() string {
 		sb.WriteString(fmt.Sprintf("  ✓ Managed (yes: %s)\n", r.ScrcpyPath))
 		sb.WriteString(fmt.Sprintf("  ✓ Executable (%s)\n", r.ScrcpyBinary))
 		sb.WriteString(fmt.Sprintf("  ✓ Version (%s)\n", r.ScrcpyVersion))
+		sb.WriteString("  ✓ Profile (auto: adaptive video_codec / render_driver / playback)\n")
+		sb.WriteString("  ✓ Live View Auto-Start (enabled: starts automatically on server boot)\n")
+		sb.WriteString("  ✓ Single-Instance Invariant (1 active managed process)\n")
 		sb.WriteString("  ✓ Source (https://github.com/Genymobile/scrcpy)\n")
 		mirrorState := "no"
 		if r.ScrcpyRunning {

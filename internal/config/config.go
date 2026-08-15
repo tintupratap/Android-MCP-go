@@ -19,26 +19,32 @@ type DeviceConfig struct {
 }
 
 type ScrcpyPreferences struct {
-	Enabled            bool   `json:"enabled"`
-	AutoStart          bool   `json:"auto_start"`
-	VideoSource        string `json:"video_source,omitempty"`
-	DisplayID          string `json:"display_id,omitempty"`
-	CameraID           string `json:"camera_id,omitempty"`
-	CameraSize         string `json:"camera_size,omitempty"`
-	CameraFPS          string `json:"camera_fps,omitempty"`
-	CameraHighSpeed    bool   `json:"camera_high_speed,omitempty"`
-	VideoCodec         string `json:"video_codec,omitempty"`
-	VideoEncoder       string `json:"video_encoder,omitempty"`
-	VideoBitrate       string `json:"video_bitrate,omitempty"`
-	MaxResolutionSize int    `json:"max_resolution_size,omitempty"`
-	AudioSource        string `json:"audio_source,omitempty"`
-	AudioCodec         string `json:"audio_codec,omitempty"`
-	AudioEncoder       string `json:"audio_encoder,omitempty"`
-	AudioBitrate       string `json:"audio_bitrate,omitempty"`
-	TurnScreenOff      bool   `json:"turn_screen_off,omitempty"`
-	StayAwake          bool   `json:"stay_awake,omitempty"`
-	PowerOffOnClose    bool   `json:"power_off_on_close,omitempty"`
-	RenderDriver       string `json:"render_driver,omitempty"`
+	Enabled                bool   `json:"enabled"`
+	AutoStart              bool   `json:"auto_start"`
+	AutoRelaunchOnToolCall bool   `json:"auto_relaunch_on_tool_call"`
+	RequireLiveView        bool   `json:"require_live_view"`
+	Profile                string `json:"profile,omitempty"`      // "auto", "performance", "balanced", "quality", "compatibility"
+	Optimization           string `json:"optimization,omitempty"` // "maximum", "balanced", "conservative"
+	Audio                  string `json:"audio,omitempty"`        // "auto", "playback", "disabled"
+	VideoSource            string `json:"video_source,omitempty"`
+	DisplayID              string `json:"display_id,omitempty"`
+	CameraID               string `json:"camera_id,omitempty"`
+	CameraSize             string `json:"camera_size,omitempty"`
+	CameraFPS              string `json:"camera_fps,omitempty"`
+	CameraHighSpeed        bool   `json:"camera_high_speed,omitempty"`
+	VideoCodec             string `json:"video_codec,omitempty"`   // "auto", "h265", "h264", "av1"
+	VideoEncoder           string `json:"video_encoder,omitempty"` // "auto" or explicit OMX/c2 encoder
+	VideoBitrate           string `json:"video_bitrate,omitempty"` // "auto", "4M", "8M", etc.
+	MaxFPS                 string `json:"max_fps,omitempty"`       // "auto", "60", "30", etc.
+	MaxResolutionSize     int    `json:"max_resolution_size,omitempty"`
+	AudioSource            string `json:"audio_source,omitempty"`
+	AudioCodec             string `json:"audio_codec,omitempty"`
+	AudioEncoder           string `json:"audio_encoder,omitempty"`
+	AudioBitrate           string `json:"audio_bitrate,omitempty"`
+	TurnScreenOff          bool   `json:"turn_screen_off,omitempty"`
+	StayAwake              bool   `json:"stay_awake,omitempty"`
+	PowerOffOnClose        bool   `json:"power_off_on_close,omitempty"`
+	RenderDriver           string `json:"render_driver,omitempty"` // "auto", "metal", "opengl", etc.
 }
 
 type PlatformToolsConfig struct {
@@ -114,15 +120,23 @@ func DefaultConfig() *Config {
 			Connection: "auto",
 		},
 		Scrcpy: ScrcpyPreferences{
-			Enabled:      true,
-			AutoStart:    true,
-			VideoSource:  "display",
-			VideoCodec:   "h265",
-			VideoBitrate: "4M",
-			AudioSource:  "playback",
-			AudioCodec:   "opus",
-			AudioBitrate: "128K",
-			StayAwake:    true,
+			Enabled:                true,
+			AutoStart:              true,
+			AutoRelaunchOnToolCall: true,
+			RequireLiveView:        true,
+			Profile:                "auto",
+			Optimization:           "maximum",
+			Audio:                  "auto",
+			VideoSource:            "display",
+			VideoCodec:             "auto",
+			VideoEncoder:           "auto",
+			VideoBitrate:           "auto",
+			MaxFPS:                 "auto",
+			RenderDriver:           "auto",
+			AudioSource:            "playback",
+			AudioCodec:             "opus",
+			AudioBitrate:           "128K",
+			StayAwake:              true,
 		},
 		Notifications: NotificationsConfig{
 			Enabled: true,

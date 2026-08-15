@@ -3,7 +3,6 @@ package device
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -170,13 +169,6 @@ func (m *DefaultDeviceManager) connectLocked(ctx context.Context, serial string)
 		cfg.LastSeen = time.Now()
 		cfg.LastSuccessfulConnection = time.Now()
 		_ = config.SaveConfig(cfg)
-	}
-
-	if m.scrcpyMgr != nil && os.Getenv("ANDROID_MCP_SCRCPY") != "false" {
-		go func(ser, mod string) {
-			title := fmt.Sprintf("Android-MCP — %s (%s)", mod, ser)
-			_ = m.scrcpyMgr.Launch(context.Background(), ser, title)
-		}(target, model)
 	}
 
 	return m.activeDevice, nil

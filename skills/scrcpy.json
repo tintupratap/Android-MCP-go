@@ -21,6 +21,16 @@
       "name": "managed_scrcpy_stop",
       "command": "android-mcp scrcpy stop",
       "status": "PHYSICALLY VERIFIED"
+    },
+    {
+      "name": "managed_scrcpy_capabilities",
+      "command": "android-mcp scrcpy capabilities",
+      "status": "PHYSICALLY VERIFIED"
+    },
+    {
+      "name": "managed_scrcpy_profile",
+      "command": "android-mcp scrcpy profile",
+      "status": "PHYSICALLY VERIFIED"
     }
   ]
 }

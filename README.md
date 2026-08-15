@@ -31,7 +31,8 @@ The installer automatically installs:
 ## 🚀 Highlights
 
 - **⚡ Instant & Native**: Compiled Go binary with startup < 5ms, zero Python overhead, and minimal memory footprint.
-- **🖥️ Live Screen Mirroring**: Automatically launches managed `scrcpy` from official GitHub releases (`Genymobile/scrcpy`) upon device connection so you can watch physical hardware execution in real time.
+- 🖥️ **Managed `scrcpy` & Single-Instance Live View**: Auto-installs official `scrcpy` releases with a **strict single-instance invariant** (0 or 1 window, never 2+). Automatically opens on boot without requiring tool calls.
+- 👁️ **Persistent Visual Observability**: If you manually close the `scrcpy` window, the MCP server and ADB remain connected. Upon the next device tool call, `Android-MCP-go` automatically restores `scrcpy` **before executing the action** so you can continuously observe AI behavior.
 - **📦 100% Self-Contained**: Manages its own Platform-Tools (`adb`) and `scrcpy` binaries inside `~/.android-mcp/`. Zero dependency on host Android SDK, `ANDROID_HOME`, system ADB, or package managers.
 - **📡 Wireless Auto-Bootstrap**: Plug in USB once; `Android-MCP-go` automatically discovers the device's WiFi IP, switches ADB to TCP/IP mode (`port 5555`), verifies connection integrity, and persists state. USB can be disconnected immediately.
 - **🖼️ Vision & Annotated Screenshots**: Generates structured XML UI element trees and visually annotated PNG screenshots with bounding boxes and element index badges.
@@ -193,6 +194,7 @@ android-mcp scrcpy stop
 - [docs/TESTING_REPORT.md](docs/TESTING_REPORT.md) — Comprehensive hardware & software testing report.
 - [docs/SELF_CONTAINED.md](docs/SELF_CONTAINED.md) — 100% self-contained runtime architecture guide.
 - [docs/SCRCPY.md](docs/SCRCPY.md) — Managed scrcpy & live display mirror documentation.
+- [docs/SCRCPY_OPTIMIZATION.md](docs/SCRCPY_OPTIMIZATION.md) — Adaptive scrcpy optimization & progressive degradation architecture.
 - [docs/PLATFORM_TOOLS.md](docs/PLATFORM_TOOLS.md) — Self-contained platform-tools manager documentation.
 - [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md) — Desktop notification engine & `--debug` activity alerts.
 - [docs/CONFIGURATION_MIGRATION.md](docs/CONFIGURATION_MIGRATION.md) — Unified state schema & one-time migration guide.

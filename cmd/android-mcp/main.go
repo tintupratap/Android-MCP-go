@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/tintupratap/Android-MCP-go/internal/adb"
+	"github.com/tintupratap/Android-MCP-go/internal/config"
 	"github.com/tintupratap/Android-MCP-go/internal/device"
 	"github.com/tintupratap/Android-MCP-go/internal/doctor"
 	"github.com/tintupratap/Android-MCP-go/internal/logging"
@@ -46,20 +47,24 @@ func main() {
 	}
 
 	var (
-		deviceFlag     string
-		connectionFlag string
-		wifiFlag       string
-		usbFlag        string
-		debugFlag      bool
-		showVersion    bool
-		showDoctor     bool
-		showStatus     bool
+		deviceFlag       string
+		connectionFlag   string
+		wifiFlag         string
+		usbFlag          string
+		noScrcpyFlag     bool
+		noRelaunchFlag   bool
+		debugFlag        bool
+		showVersion      bool
+		showDoctor       bool
+		showStatus       bool
 	)
 
 	flag.StringVar(&deviceFlag, "device", "", "ADB device serial or host:port")
 	flag.StringVar(&connectionFlag, "connection", "", "Preferred device connection type (auto, usb, wifi)")
 	flag.StringVar(&wifiFlag, "wifi", "", "Use WiFi ADB. Accepts HOST or HOST:PORT (defaults to port 5555)")
 	flag.StringVar(&usbFlag, "usb", "", "Use USB ADB. Optionally provide a specific device serial")
+	flag.BoolVar(&noScrcpyFlag, "no-scrcpy", false, "Disable automatic scrcpy live view display window startup")
+	flag.BoolVar(&noRelaunchFlag, "no-scrcpy-relaunch", false, "Disable tool-call scrcpy auto-relaunch after user window close")
 	flag.BoolVar(&debugFlag, "debug", false, "Enable verbose debug logging and activity desktop notifications")
 	flag.BoolVar(&showVersion, "version", false, "Show version and exit")
 	flag.BoolVar(&showDoctor, "doctor", false, "Run doctor diagnostic check and exit")
@@ -79,6 +84,14 @@ func main() {
 	if showStatus {
 		runStatusCmd()
 		return
+	}
+
+	if noRelaunchFlag {
+		appCfg, err := config.LoadConfig()
+		if err == nil && appCfg != nil {
+			appCfg.Scrcpy.AutoRelaunchOnToolCall = false
+			_ = config.SaveConfig(appCfg)
+		}
 	}
 
 	notifLevel := notification.LevelNormal
@@ -108,7 +121,7 @@ func main() {
 
 	// Ensure scrcpy is present if enabled
 	scrcpyMgr, errScrcpy := scrcpy.NewManager(notifier)
-	if errScrcpy == nil && os.Getenv("ANDROID_MCP_SCRCPY") != "false" {
+	if errScrcpy == nil && os.Getenv("ANDROID_MCP_SCRCPY") != "false" && !noScrcpyFlag {
 		if !scrcpyMgr.IsInstalled() {
 			_, errEnsureScrcpy := scrcpyMgr.Ensure(ctx)
 			if errEnsureScrcpy != nil {
@@ -124,7 +137,20 @@ func main() {
 	adbClient := adb.NewClient("")
 	deviceMgr := device.NewDeviceManager(adbClient, notifier, pref, scrcpyMgr)
 
+	resolverFunc := func(ctx context.Context) (string, string, error) {
+		dev, err := deviceMgr.Resolve(ctx)
+		if err != nil || dev == nil {
+			return "", "", err
+		}
+		return dev.Serial, dev.Model, nil
+	}
+
+	liveViewMgr := scrcpy.NewLiveViewManager(scrcpyMgr, resolverFunc, adbClient, notifier, noScrcpyFlag)
+	liveViewMgr.StartBackground(ctx)
+	defer liveViewMgr.Stop()
+
 	server := mcp.NewServer(deviceMgr, adbClient, os.Stdin, os.Stdout, actNotifier)
+	server.SetLiveViewManager(liveViewMgr)
 
 	if err := server.ListenAndServe(ctx); err != nil && ctx.Err() == nil {
 		logging.Errorf("Server error: %v", err)
@@ -191,6 +217,49 @@ func runScrcpyCmd(args []string) {
 	}
 
 	switch action {
+	case "capabilities":
+		binCaps := scrcpy.DetectBinaryCapabilities(ctx, scrcpyMgr.BinaryPath())
+		hostCaps := scrcpy.DetectHostCapabilities()
+		adbClient := adb.NewClient("")
+		devCaps := scrcpy.DetectDeviceCapabilities(ctx, adbClient, "")
+
+		fmt.Println("scrcpy Subsystem Capabilities")
+		fmt.Println("=============================")
+		fmt.Printf("Binary Path:      %s\n", scrcpyMgr.BinaryPath())
+		fmt.Printf("Version:          %s\n", binCaps.Version)
+		fmt.Printf("Host Platform:    %s/%s\n", hostCaps.OS, hostCaps.Arch)
+		fmt.Printf("Native Renderer:  %s\n", hostCaps.NativeRenderer)
+		fmt.Println("Supported Flags:")
+		fmt.Printf("  --render-driver: %v\n", binCaps.SupportsRenderDriver)
+		fmt.Printf("  --video-codec:   %v\n", binCaps.SupportsVideoCodec)
+		fmt.Printf("  --video-encoder: %v\n", binCaps.SupportsVideoEncoder)
+		fmt.Printf("  --audio-source:  %v\n", binCaps.SupportsAudioSource)
+		fmt.Printf("  --display-id:    %v\n", binCaps.SupportsDisplayID)
+		if devCaps.Model != "" {
+			fmt.Printf("Target Device:    %s (%s, SDK %s)\n", devCaps.Model, devCaps.Manufacturer, devCaps.SDKVersion)
+		}
+	case "profile":
+		adbClient := adb.NewClient("")
+		sysCaps := scrcpy.SystemCapabilities{
+			Binary: scrcpy.DetectBinaryCapabilities(ctx, scrcpyMgr.BinaryPath()),
+			Host:   scrcpy.DetectHostCapabilities(),
+			Device: scrcpy.DetectDeviceCapabilities(ctx, adbClient, ""),
+		}
+		appCfg, _ := config.LoadConfig()
+		var prefs *config.ScrcpyPreferences
+		if appCfg != nil {
+			prefs = &appCfg.Scrcpy
+		}
+		profile := scrcpy.ResolveOptimalProfile(prefs, sysCaps, "192.168.1.3:5555", "Android-MCP")
+		fmt.Println("scrcpy Resolved Optimal Profile")
+		fmt.Println("===============================")
+		fmt.Printf("Profile Name:     %s\n", profile.Name)
+		fmt.Printf("Video Codec:      %s\n", profile.VideoCodec)
+		fmt.Printf("Renderer:         %s\n", profile.Renderer)
+		fmt.Printf("Audio Mode:       %s\n", profile.Audio)
+		fmt.Printf("Bitrate:          %s\n", profile.Bitrate)
+		fmt.Printf("Optimized:        %v\n", profile.Optimized)
+		fmt.Printf("Command Args:     %s\n", strings.Join(profile.Args, " "))
 	case "status":
 		fmt.Printf("scrcpy Path:       %s\n", scrcpyMgr.Path())
 		fmt.Printf("scrcpy Binary:     %s\n", scrcpyMgr.BinaryPath())
@@ -216,7 +285,7 @@ func runScrcpyCmd(args []string) {
 		}
 		serial := devs[0].Serial
 		fmt.Printf("Launching scrcpy screen mirror for device %s...\n", serial)
-		if err := scrcpyMgr.Launch(ctx, serial, fmt.Sprintf("Android-MCP — %s", serial)); err != nil {
+		if err := scrcpyMgr.LaunchWithFallback(ctx, adbClient, serial, fmt.Sprintf("Android-MCP — %s", serial)); err != nil {
 			fmt.Printf("❌ Launch failed: %v\n", err)
 			os.Exit(1)
 		}
@@ -225,7 +294,7 @@ func runScrcpyCmd(args []string) {
 		scrcpyMgr.StopAll()
 		fmt.Println("✓ Stopped active scrcpy screen mirror processes.")
 	default:
-		fmt.Printf("Unknown scrcpy subcommand: %s. Use status, update, start, or stop.\n", action)
+		fmt.Printf("Unknown scrcpy subcommand: %s. Use capabilities, profile, status, update, start, or stop.\n", action)
 	}
 }
 
