@@ -7,6 +7,16 @@ All notable changes to **Android-MCP-go** are documented in this file. Format fo
 
 ---
 
+## [0.5.0] - 2026-08-15
+
+### Added
+- **Phase 1 Native Android Engine (`mcp-helper.dex`)**:
+  - Bundled a 6.2 KB lightweight Android DEX helper compiled with Android API 34.
+  - Embedded directly into Go binary via `//go:embed mcp-helper.dex` with zero runtime host dependencies.
+  - Implemented stationary touch-down hold (800ms) in `HelperMain.doDrag` for 100% reliable drag-and-drop across Android launchers, widgets, and custom views.
+  - Implemented Base64 Unicode & Emoji text input stream in `HelperMain.doType` eliminating shell character escaping failures.
+  - Implemented fast hardware touch injection in `HelperMain.doTap` bypassing shell latency.
+
 ## [0.4.0] - 2026-08-15
 
 ### Added
