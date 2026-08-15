@@ -550,6 +550,12 @@ func (s *Server) registerTools() {
 		}
 		return textResult(fmt.Sprintf("Pinched pointer 1 (%d,%d)->(%d,%d) and pointer 2 (%d,%d)->(%d,%d)", x1, y1, x2, y2, x3, y3, x4, y4)), nil
 	})
+	pinchTool := s.tools["Pinch"]
+	pinchHandler := s.handlers["Pinch"]
+	pinchTool.Name = "pinch"
+	s.registerTool(pinchTool, pinchHandler)
+	pinchTool.Name = "ui_pinch"
+	s.registerTool(pinchTool, pinchHandler)
 
 	// 11. Press
 	s.registerTool(Tool{
@@ -934,6 +940,15 @@ func (s *Server) handleRequest(ctx context.Context, req JSONRPCRequest) {
 		}
 
 		handler, ok := s.handlers[params.Name]
+		if !ok {
+			for name, h := range s.handlers {
+				if strings.EqualFold(name, params.Name) {
+					handler = h
+					ok = true
+					break
+				}
+			}
+		}
 		if !ok {
 			s.sendError(req.ID, -32601, "Method not found", fmt.Sprintf("Unknown tool: %s", params.Name))
 			return
