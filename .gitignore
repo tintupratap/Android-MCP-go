@@ -1,19 +1,36 @@
-# Binaries
+# Binaries & Executables
 /android-mcp
 /android-mcp-*
 *.exe
 *.exe.test
 *.test
 *.prof
+*.dll
+*.so
+*.dylib
 
 # Build & Temporary Files
 .tmp/
+.tmp_*
 dist/
-build/
+build/out/
 *.bak
 *.tmp
+*.log
 
-# OS generated files
+# Python Cache & E2E Test Artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Coverage & Profiling Output
+coverage.out
+coverage.html
+cpu.pprof
+mem.pprof
+
+# OS Generated Files
 .DS_Store
 .DS_Store?
 ._*
@@ -22,12 +39,15 @@ build/
 ehthumbs.db
 Thumbs.db
 
-# IDEs
+# IDE & Editor Configurations
 .idea/
 .vscode/
 *.swp
 *.swo
+*.sublime-workspace
+*.sublime-project
 
-# Coverage
-coverage.out
-coverage.html
+# Environment & Secrets
+.env
+.env.*
+!.env.example
