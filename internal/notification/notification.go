@@ -18,6 +18,16 @@ func NewNotifier() Notifier {
 	return &DefaultNotifier{}
 }
 
+type NoopNotifier struct{}
+
+func NewNoopNotifier() Notifier {
+	return &NoopNotifier{}
+}
+
+func (n *NoopNotifier) Notify(title, message string) error {
+	return nil
+}
+
 func (n *DefaultNotifier) Notify(title, message string) error {
 	var err error
 	switch runtime.GOOS {

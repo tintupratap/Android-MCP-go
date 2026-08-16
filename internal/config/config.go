@@ -23,6 +23,7 @@ type ScrcpyPreferences struct {
 	AutoStart              bool   `json:"auto_start"`
 	AutoRelaunchOnToolCall bool   `json:"auto_relaunch_on_tool_call"`
 	RequireLiveView        bool   `json:"require_live_view"`
+	DisableAlwaysOnTop     bool   `json:"disable_always_on_top,omitempty"`
 	Profile                string `json:"profile,omitempty"`      // "auto", "performance", "balanced", "quality", "compatibility"
 	Optimization           string `json:"optimization,omitempty"` // "maximum", "balanced", "conservative"
 	Audio                  string `json:"audio,omitempty"`        // "auto", "playback", "disabled"

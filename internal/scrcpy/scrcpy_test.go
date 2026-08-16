@@ -119,6 +119,15 @@ func TestProfileResolutionAndDegradation(t *testing.T) {
 		t.Fatalf("unexpected optimal profile resolution: %+v", profile)
 	}
 
+	// Test DisableAlwaysOnTop flag
+	noAlwaysTopPrefs := &config.ScrcpyPreferences{DisableAlwaysOnTop: true}
+	pNoAlways := ResolveOptimalProfile(noAlwaysTopPrefs, sysCaps, "192.168.1.3:5555", "Test Window")
+	for _, arg := range pNoAlways.Args {
+		if arg == "--always-on-top" {
+			t.Fatalf("expected --always-on-top to be omitted when DisableAlwaysOnTop is true")
+		}
+	}
+
 	// Degrade Step 1: drop render-driver
 	p1, ok1 := DegradeProfile(profile, sysCaps, fmt.Errorf("metal render driver unsupported"))
 	if !ok1 || p1.Renderer != "" {

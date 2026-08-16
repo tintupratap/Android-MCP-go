@@ -41,4 +41,9 @@ func TestNotifier(t *testing.T) {
 	if !mock.WasCalled() {
 		t.Fatalf("expected mock to be called")
 	}
+
+	noop := NewNoopNotifier()
+	if err := noop.Notify("Quiet Test", "Silent Message"); err != nil {
+		t.Fatalf("noop notifier failed: %v", err)
+	}
 }

@@ -94,18 +94,28 @@ Add `android-mcp` to your MCP client configuration:
 }
 ```
 
-### Enable Debug Notifications (`--debug`)
+### Enable Debug Notifications (`--debug`) or Silent Mode (`--quiet`)
 
 ```json
 {
   "mcpServers": {
     "android-mcp": {
       "command": "android-mcp",
-      "args": ["--debug"]
+      "args": ["--quiet", "--no-always-on-top"]
     }
   }
 }
 ```
+
+### Command Line Flags
+
+| Flag | Description |
+|---|---|
+| `--quiet` | Disable all desktop notifications |
+| `--no-always-on-top` | Launch `scrcpy` display mirror in normal window mode (removes `--always-on-top`) |
+| `--no-scrcpy` | Disable `scrcpy` live view display mirror startup entirely |
+| `--no-scrcpy-relaunch` | Disable tool-call `scrcpy` auto-relaunch after user window close |
+| `--debug` | Enable verbose debug logging and activity desktop notifications |
 
 ### Cursor IDE / Windsurf / VSCode
 

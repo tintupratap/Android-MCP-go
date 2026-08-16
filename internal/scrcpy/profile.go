@@ -47,7 +47,10 @@ func ResolveOptimalProfile(userPrefs *config.ScrcpyPreferences, caps SystemCapab
 		profileName = userPrefs.Profile
 	}
 
-	baseArgs := []string{"--window-title", title, "--always-on-top"}
+	baseArgs := []string{"--window-title", title}
+	if userPrefs == nil || !userPrefs.DisableAlwaysOnTop {
+		baseArgs = append(baseArgs, "--always-on-top")
+	}
 	if serial != "" {
 		baseArgs = append(baseArgs, "-s", serial)
 	}

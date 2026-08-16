@@ -47,16 +47,18 @@ func main() {
 	}
 
 	var (
-		deviceFlag       string
-		connectionFlag   string
-		wifiFlag         string
-		usbFlag          string
-		noScrcpyFlag     bool
-		noRelaunchFlag   bool
-		debugFlag        bool
-		showVersion      bool
-		showDoctor       bool
-		showStatus       bool
+		deviceFlag        string
+		connectionFlag    string
+		wifiFlag          string
+		usbFlag           string
+		noScrcpyFlag      bool
+		noRelaunchFlag    bool
+		noAlwaysOnTopFlag bool
+		quietFlag         bool
+		debugFlag         bool
+		showVersion       bool
+		showDoctor        bool
+		showStatus        bool
 	)
 
 	flag.StringVar(&deviceFlag, "device", "", "ADB device serial or host:port")
@@ -65,6 +67,8 @@ func main() {
 	flag.StringVar(&usbFlag, "usb", "", "Use USB ADB. Optionally provide a specific device serial")
 	flag.BoolVar(&noScrcpyFlag, "no-scrcpy", false, "Disable automatic scrcpy live view display window startup")
 	flag.BoolVar(&noRelaunchFlag, "no-scrcpy-relaunch", false, "Disable tool-call scrcpy auto-relaunch after user window close")
+	flag.BoolVar(&noAlwaysOnTopFlag, "no-always-on-top", false, "Disable --always-on-top window flag when launching scrcpy")
+	flag.BoolVar(&quietFlag, "quiet", false, "Disable desktop notifications")
 	flag.BoolVar(&debugFlag, "debug", false, "Enable verbose debug logging and activity desktop notifications")
 	flag.BoolVar(&showVersion, "version", false, "Show version and exit")
 	flag.BoolVar(&showDoctor, "doctor", false, "Run doctor diagnostic check and exit")
@@ -86,26 +90,46 @@ func main() {
 		return
 	}
 
-	if noRelaunchFlag {
-		appCfg, err := config.LoadConfig()
-		if err == nil && appCfg != nil {
+	appCfg, errLoad := config.LoadConfig()
+	if errLoad == nil && appCfg != nil {
+		var updated bool
+		if noScrcpyFlag {
+			appCfg.Scrcpy.Enabled = false
+			appCfg.Scrcpy.AutoStart = false
+			updated = true
+		}
+		if noRelaunchFlag {
 			appCfg.Scrcpy.AutoRelaunchOnToolCall = false
+			updated = true
+		}
+		if noAlwaysOnTopFlag {
+			appCfg.Scrcpy.DisableAlwaysOnTop = true
+			updated = true
+		}
+		if updated {
 			_ = config.SaveConfig(appCfg)
 		}
 	}
 
+	var notifier notification.Notifier
 	notifLevel := notification.LevelNormal
-	if debugFlag || os.Getenv("LOG_LEVEL") == "debug" {
+
+	if quietFlag || os.Getenv("ANDROID_MCP_QUIET") == "true" {
+		notifier = notification.NewNoopNotifier()
+		notifLevel = notification.LevelSilent
+	} else if debugFlag || os.Getenv("LOG_LEVEL") == "debug" {
 		logging.SetLevel(logging.LevelDebug)
+		notifier = notification.NewNotifier()
 		notifLevel = notification.LevelDebug
 	} else {
 		logging.SetLevel(logging.LevelInfo)
+		notifier = notification.NewNotifier()
+		notifLevel = notification.LevelNormal
 	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	notifier := notification.NewNotifier()
 	actNotifier := notification.NewActivityNotifier(notifier, notifLevel)
 
 	// Ensure Platform-Tools are present
