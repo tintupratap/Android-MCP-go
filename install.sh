@@ -105,7 +105,7 @@ TMP_BIN="$(mktemp)"
 trap 'rm -f "$TMP_BIN"' EXIT
 
 if [ -n "$TAG" ]; then
-    log "Targeting GitHub Release Tag: ${BOLD}${TAG}${RESET}"
+    log "Targeting GitHub Release Tag: ${TAG}"
     
     # Try downloading standalone binary asset for resolved tag
     RELEASE_URL="https://github.com/tintupratap/Android-MCP-go/releases/download/${TAG}/android-mcp-${OS}-${ARCH}"
