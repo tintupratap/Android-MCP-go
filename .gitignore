@@ -1,6 +1,6 @@
 # Binaries
-android-mcp
-android-mcp-*
+/android-mcp
+/android-mcp-*
 *.exe
 *.exe.test
 *.test
