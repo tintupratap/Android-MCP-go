@@ -30,16 +30,18 @@ type Manifest struct {
 }
 
 type SkillItem struct {
-	Name        string `json:"name"`
-	Command     string `json:"command,omitempty"`
-	MCPTool     string `json:"mcp_tool,omitempty"`
-	Status      string `json:"status"`
-	Description string `json:"description,omitempty"`
+	ID          string   `json:"id,omitempty"`
+	Name        string   `json:"name"`
+	Command     string   `json:"command,omitempty"`
+	MCPTool     string   `json:"mcp_tool,omitempty"`
+	MCPTools    []string `json:"mcp_tools,omitempty"`
+	Status      string   `json:"status"`
+	Description string   `json:"description,omitempty"`
 }
 
 type DomainManifest struct {
 	Domain      string      `json:"domain"`
-	Description string      `json:"description"`
+	Description string      `json:"description,omitempty"`
 	Skills      []SkillItem `json:"skills"`
 }
 
@@ -72,19 +74,19 @@ func (m *Manager) IsInstalled() bool {
 
 var EmbeddedManifest = `{
   "name": "Android-MCP-go",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Production-grade Go implementation of the Model Context Protocol server for Android operating systems",
   "domains": [
-    { "id": "device", "file": "device.json", "description": "Device management, discovery, and wireless bootstrap" },
-    { "id": "ui", "file": "ui.json", "description": "UI hierarchy parsing, selectors, and element interaction" },
-    { "id": "screenshot", "file": "screenshot.json", "description": "Screen capture and visual annotations" },
-    { "id": "input", "file": "input.json", "description": "Touch gestures, text typing, and key events" },
-    { "id": "applications", "file": "applications.json", "description": "Package listing, application launching, stopping, and package info" },
-    { "id": "filesystem", "file": "filesystem.json", "description": "Android file push, pull, directory listing, and removal" },
-    { "id": "shell", "file": "shell.json", "description": "ADB shell execution with context timeouts" },
-    { "id": "automation", "file": "automation.json", "description": "Workflow execution and verification assertions" },
-    { "id": "scrcpy", "file": "scrcpy.json", "description": "Managed scrcpy display mirroring and process management" },
-    { "id": "platform_tools", "file": "platform_tools.json", "description": "Self-contained Android SDK Platform-Tools management" }
+    { "id": "device", "file": "skills/device.json", "description": "Device management, discovery, metadata, and wireless bootstrap" },
+    { "id": "ui", "file": "skills/ui.json", "description": "UI hierarchy parsing, selectors, element interaction, and polling" },
+    { "id": "screenshot", "file": "skills/screenshot.json", "description": "Screen capture and visual annotations" },
+    { "id": "input", "file": "skills/input.json", "description": "Touch gestures, multi-touch pinch zoom, text typing, key events, and notifications" },
+    { "id": "applications", "file": "skills/applications.json", "description": "Package listing, application launching, stopping, and package info" },
+    { "id": "filesystem", "file": "skills/filesystem.json", "description": "Android file push, pull, directory listing, and removal" },
+    { "id": "shell", "file": "skills/shell.json", "description": "ADB shell execution with context timeouts" },
+    { "id": "automation", "file": "skills/automation.json", "description": "Automated E2E physical test suite and verification assertions" },
+    { "id": "scrcpy", "file": "skills/scrcpy.json", "description": "Managed scrcpy display mirroring and process management" },
+    { "id": "platform_tools", "file": "skills/platform_tools.json", "description": "Self-contained Android SDK Platform-Tools management" }
   ]
 }`
 
@@ -95,13 +97,11 @@ func (m *Manager) EnsureSkills(ctx context.Context) error {
 	}
 
 	manifestPath := m.ManifestPath()
-	if _, err := os.Stat(manifestPath); err != nil {
-		if err := os.WriteFile(manifestPath, []byte(EmbeddedManifest), 0644); err != nil {
-			return fmt.Errorf("failed to write embedded manifest.json: %w", err)
-		}
+	if err := os.WriteFile(manifestPath, []byte(EmbeddedManifest), 0644); err != nil {
+		return fmt.Errorf("failed to write manifest.json: %w", err)
 	}
 
-	// Copy/Download domain manifests
+	// Read manifest
 	var manifest Manifest
 	data, err := os.ReadFile(manifestPath)
 	if err == nil {
@@ -110,12 +110,9 @@ func (m *Manager) EnsureSkills(ctx context.Context) error {
 
 	for _, domain := range manifest.Domains {
 		targetFile := filepath.Join(skillsDir, filepath.Base(domain.File))
-		if _, err := os.Stat(targetFile); err != nil {
-			// Download from repository
-			url := fmt.Sprintf("%s/%s", SkillsRepoBaseURL, filepath.Base(domain.File))
-			if err := downloadSkillFile(ctx, url, targetFile); err != nil {
-				logging.Debugf("Skill file download skipped for %s: %v", domain.ID, err)
-			}
+		url := fmt.Sprintf("%s/%s", SkillsRepoBaseURL, filepath.Base(domain.File))
+		if err := downloadSkillFile(ctx, url, targetFile); err != nil {
+			logging.Debugf("Skill file sync skipped for %s: %v", domain.ID, err)
 		}
 	}
 
@@ -155,10 +152,12 @@ func (m *Manager) ListSkills() string {
 			if err := json.Unmarshal(domainData, &dm); err == nil {
 				for _, sk := range dm.Skills {
 					name := sk.Name
-					if sk.MCPTool != "" {
+					if len(sk.MCPTools) > 0 {
+						name = fmt.Sprintf("%s (%s)", sk.Name, strings.Join(sk.MCPTools, ", "))
+					} else if sk.MCPTool != "" {
 						name = fmt.Sprintf("%s (%s)", sk.Name, sk.MCPTool)
 					}
-					sb.WriteString(fmt.Sprintf("  - %-35s [%s]\n", name, sk.Status))
+					sb.WriteString(fmt.Sprintf("  - %-45s [%s]\n", name, sk.Status))
 				}
 			}
 		}
