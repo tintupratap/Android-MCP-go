@@ -85,13 +85,22 @@ fi
 BINARY_TARGET="${INSTALL_DIR}/android-mcp"
 INSTALLED=0
 
-# 3. Primary: Download Prebuilt Binary from GitHub Releases
+# 3. Resolve Release Version (Supports Pre-releases & Stable Releases)
 if [ -n "$VERSION" ]; then
-    log "Downloading prebuilt release ${VERSION} from GitHub Releases..."
-    RELEASE_URL="https://github.com/tintupratap/Android-MCP-go/releases/download/${VERSION}/android-mcp-${OS}-${ARCH}"
+    TAG="$VERSION"
+else
+    log "Querying latest release/pre-release tag from GitHub..."
+    TAG=$(curl -fsSL -H "User-Agent: Android-MCP-Installer" "https://api.github.com/repos/tintupratap/Android-MCP-go/releases" 2>/dev/null | grep -o '"tag_name": *"[^"]*"' | head -n 1 | cut -d'"' -f4 || true)
+fi
+
+if [ -n "$TAG" ]; then
+    log "Targeting GitHub Release Tag: ${BOLD}${TAG}${RESET}"
+    RELEASE_URL="https://github.com/tintupratap/Android-MCP-go/releases/download/${TAG}/android-mcp-${OS}-${ARCH}"
+    TAR_URL="https://github.com/tintupratap/Android-MCP-go/releases/download/${TAG}/android-mcp-${TAG}-${OS}-${ARCH}.tar.gz"
 else
     log "Downloading latest prebuilt release from GitHub Releases (https://github.com/tintupratap/Android-MCP-go/releases)..."
     RELEASE_URL="https://github.com/tintupratap/Android-MCP-go/releases/latest/download/android-mcp-${OS}-${ARCH}"
+    TAR_URL="https://github.com/tintupratap/Android-MCP-go/releases/latest/download/android-mcp-${OS}-${ARCH}.tar.gz"
 fi
 
 TMP_BIN="$(mktemp)"
@@ -107,12 +116,6 @@ else
     TMP_DIR="$(mktemp -d)"
     trap 'rm -rf "$TMP_DIR"' EXIT
     
-    if [ -n "$VERSION" ]; then
-        TAR_URL="https://github.com/tintupratap/Android-MCP-go/releases/download/${VERSION}/android-mcp-${VERSION}-${OS}-${ARCH}.tar.gz"
-    else
-        TAR_URL="https://github.com/tintupratap/Android-MCP-go/releases/latest/download/android-mcp-${OS}-${ARCH}.tar.gz"
-    fi
-
     if curl -cL --fail --silent "$TAR_URL" -o "$TMP_DIR/archive.tar.gz" 2>/dev/null; then
         tar -xzf "$TMP_DIR/archive.tar.gz" -C "$TMP_DIR"
         EXTRACTED_BIN="$(find "$TMP_DIR" -type f -name "android-mcp" | head -n 1)"

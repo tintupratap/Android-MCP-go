@@ -48,14 +48,29 @@ if ($UserPath -notlike "*$InstallDir*") {
     Write-HostColor "Added $InstallDir to User PATH" "Yellow"
 }
 
-# 4. Primary: Download Prebuilt Binary from GitHub Releases
+# 4. Resolve Version (Supports Pre-releases & Stable Releases)
 if ($env:VERSION) {
     $TargetVer = $env:VERSION
-    Write-HostColor "Downloading prebuilt release $TargetVer from GitHub Releases..." "Cyan"
-    $ReleaseUrl = "https://github.com/tintupratap/Android-MCP-go/releases/download/$TargetVer/android-mcp-windows-$Arch.exe"
 } else {
-    Write-HostColor "Downloading latest prebuilt release from GitHub Releases (https://github.com/tintupratap/Android-MCP-go/releases)..." "Cyan"
+    Write-HostColor "Querying latest release/pre-release tag from GitHub..." "Cyan"
+    try {
+        $ReleasesJson = Invoke-RestMethod -Uri "https://api.github.com/repos/tintupratap/Android-MCP-go/releases" -Headers @{"User-Agent"="Android-MCP-Installer"} -ErrorAction Stop
+        if ($ReleasesJson -and $ReleasesJson.Count -gt 0) {
+            $TargetVer = $ReleasesJson[0].tag_name
+        }
+    } catch {
+        # Fallback to latest endpoint
+    }
+}
+
+if ($TargetVer) {
+    Write-HostColor "Targeting GitHub Release Tag: $TargetVer" "Cyan"
+    $ReleaseUrl = "https://github.com/tintupratap/Android-MCP-go/releases/download/$TargetVer/android-mcp-windows-$Arch.exe"
+    $ZipUrl     = "https://github.com/tintupratap/Android-MCP-go/releases/download/$TargetVer/android-mcp-$TargetVer-windows-$Arch.zip"
+} else {
+    Write-HostColor "Downloading latest prebuilt release from GitHub Releases..." "Cyan"
     $ReleaseUrl = "https://github.com/tintupratap/Android-MCP-go/releases/latest/download/android-mcp-windows-$Arch.exe"
+    $ZipUrl     = "https://github.com/tintupratap/Android-MCP-go/releases/latest/download/android-mcp-windows-$Arch.zip"
 }
 
 try {
@@ -66,12 +81,6 @@ try {
     Write-HostColor "Direct release binary download failed. Attempting release zip extraction..." "Yellow"
     $TempZip = Join-Path $env:TEMP "android-mcp-release.zip"
     $TempExtract = Join-Path $env:TEMP "android-mcp-extract"
-    
-    if ($env:VERSION) {
-        $ZipUrl = "https://github.com/tintupratap/Android-MCP-go/releases/download/$TargetVer/android-mcp-$TargetVer-windows-$Arch.zip"
-    } else {
-        $ZipUrl = "https://github.com/tintupratap/Android-MCP-go/releases/latest/download/android-mcp-windows-$Arch.zip"
-    }
 
     try {
         Invoke-WebRequest -Uri $ZipUrl -OutFile $TempZip -UseBasicParsing -ErrorAction Stop
