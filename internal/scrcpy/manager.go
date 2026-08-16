@@ -78,7 +78,7 @@ func acquireProcessLock(baseDir string) (*os.File, bool) {
 	if err != nil {
 		return nil, false
 	}
-	err = syscall.Flock(int(file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+	err = lockFile(file)
 	if err != nil {
 		_ = file.Close()
 		return nil, false

@@ -21,7 +21,7 @@ import (
 	"github.com/tintupratap/Android-MCP-go/internal/skills"
 )
 
-const Version = "0.4.0"
+var Version = "0.5.0"
 
 func main() {
 	// Check for subcommand arguments first (e.g. android-mcp doctor, android-mcp status, android-mcp platform-tools, android-mcp scrcpy, android-mcp skills)
