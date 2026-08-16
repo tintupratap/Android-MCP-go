@@ -16,10 +16,16 @@ It empowers AI assistants (**Claude Desktop**, **Cursor IDE**, **Windsurf**, **A
 
 ### Option 1: 1-Line Automated Installer (Downloads Prebuilt Release)
 
-Automatically downloads the official prebuilt binary release from [GitHub Releases](https://github.com/tintupratap/Android-MCP-go/releases) on **macOS** or **Linux**:
+Automatically downloads the official prebuilt binary release from [GitHub Releases](https://github.com/tintupratap/Android-MCP-go/releases):
 
+**macOS / Linux (Bash):**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/tintupratap/Android-MCP-go/main/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/tintupratap/Android-MCP-go/main/install.ps1 | iex
 ```
 
 ### Option 2: Install via `go install`
