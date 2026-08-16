@@ -11,36 +11,50 @@
     {
       "id": "long_click",
       "name": "Long Click",
-      "mcp_tools": ["LongClick", "ui_long_click"],
-      "status": "TESTED",
+      "mcp_tools": ["LongClick"],
+      "status": "PHYSICALLY VERIFIED",
       "requires_device": true
     },
     {
       "id": "swipe",
       "name": "Swipe",
-      "mcp_tools": ["Swipe", "ui_swipe"],
-      "status": "TESTED",
+      "mcp_tools": ["Swipe"],
+      "status": "PHYSICALLY VERIFIED",
       "requires_device": true
     },
     {
       "id": "drag",
-      "name": "Drag",
-      "mcp_tools": ["Drag", "ui_drag"],
-      "status": "TESTED",
+      "name": "Drag (Touch-Hold & Move)",
+      "mcp_tools": ["Drag"],
+      "status": "PHYSICALLY VERIFIED",
+      "requires_device": true
+    },
+    {
+      "id": "pinch",
+      "name": "Multi-Touch Pinch Zoom",
+      "mcp_tools": ["Pinch", "pinch", "ui_pinch"],
+      "status": "PHYSICALLY VERIFIED",
       "requires_device": true
     },
     {
       "id": "type",
-      "name": "Type Text",
-      "mcp_tools": ["Type", "input_type"],
-      "status": "TESTED",
+      "name": "Type Text (Base64 KeyCharacterMap Stream)",
+      "mcp_tools": ["Type"],
+      "status": "PHYSICALLY VERIFIED",
       "requires_device": true
     },
     {
       "id": "press",
-      "name": "Press Key",
-      "mcp_tools": ["Press", "input_press"],
-      "status": "TESTED",
+      "name": "Press Key / Button",
+      "mcp_tools": ["Press"],
+      "status": "PHYSICALLY VERIFIED",
+      "requires_device": true
+    },
+    {
+      "id": "notification",
+      "name": "Display Screen Toast Notification",
+      "mcp_tools": ["Notification"],
+      "status": "PHYSICALLY VERIFIED",
       "requires_device": true
     }
   ]

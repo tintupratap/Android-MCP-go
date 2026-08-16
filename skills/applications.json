@@ -3,23 +3,23 @@
   "skills": [
     {
       "id": "list_apps",
-      "name": "List Applications",
+      "name": "List Installed Applications",
       "mcp_tools": ["list_apps"],
-      "status": "IMPLEMENTED",
+      "status": "PHYSICALLY VERIFIED",
       "requires_device": true
     },
     {
       "id": "launch_app",
-      "name": "Launch Application",
+      "name": "Launch Application Package",
       "mcp_tools": ["launch_app"],
-      "status": "IMPLEMENTED",
+      "status": "PHYSICALLY VERIFIED",
       "requires_device": true
     },
     {
       "id": "stop_app",
-      "name": "Stop Application",
+      "name": "Force Stop Application Package",
       "mcp_tools": ["stop_app"],
-      "status": "IMPLEMENTED",
+      "status": "PHYSICALLY VERIFIED",
       "requires_device": true
     }
   ]

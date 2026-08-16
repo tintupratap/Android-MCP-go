@@ -3,9 +3,9 @@
 > **Repository**: [https://github.com/tintupratap/Android-MCP-go](https://github.com/tintupratap/Android-MCP-go)  
 > **Author**: Ranapratap ([tintupratap@gmail.com](mailto:tintupratap@gmail.com))
 
-This document defines the capability map for human operators and AI agents interacting with **Android-MCP-go**.
+This document defines the complete capability map for human operators and AI agents interacting with **Android-MCP-go** (Version `0.5.0`).
 
-Status Vocabulary:
+### Status Vocabulary
 - `PHYSICALLY VERIFIED`: Code complete, race tested (`go test -race ./...`), and verified on physical Android hardware (Sony Xperia `SOG09`).
 - `TESTED`: Covered by automated unit and integration tests.
 - `IMPLEMENTED`: Code complete and functionally working.
@@ -21,7 +21,12 @@ Status Vocabulary:
 
 ### Connect Device
 - **MCP Tools**: `ConnectDevice`, `device_connect`
-- **Description**: Connects to target WiFi device (`IP:Port`) or selects a USB serial.
+- **Description**: Connects to target WiFi device (`IP:Port`) or selects a USB serial. Auto-resolves active target if `serial` argument is omitted.
+- **Status**: `PHYSICALLY VERIFIED`
+
+### Device Metadata & Status
+- **MCP Tool**: `Device`
+- **Description**: Queries active device metadata, model, serial, Android SDK build version, and connection mode (`action`: `list`, `connect`, `disconnect`, `get`, `info`). Defaults to listing connected targets on empty or unknown actions.
 - **Status**: `PHYSICALLY VERIFIED`
 
 ### Automatic USB → WiFi Bootstrap
@@ -45,7 +50,7 @@ Status Vocabulary:
 
 ### Click Coordinate
 - **MCP Tools**: `Click`, `ui_click`
-- **Description**: Taps screen at specified `(x, y)` coordinate.
+- **Description**: Taps screen at specified `(x, y)` coordinate via `InputManager`.
 - **Status**: `PHYSICALLY VERIFIED`
 
 ### Click By Selector
@@ -63,7 +68,7 @@ Status Vocabulary:
 - **Description**: Performs 2-pointer multi-touch pinch gesture (`MotionEvent.obtain` multi-pointer engine in `mcp-helper.dex`) for live photo and canvas zoom in, zoom out, and scaling.
 - **Status**: `PHYSICALLY VERIFIED`
 
-### Swipe & Drag
+### Swipe & Stationary Drag
 - **MCP Tools**: `Swipe`, `Drag`
 - **Description**: Performs touch swipe or stationary touch-down hold drag (800ms hold in `mcp-helper.dex`) from `(x1, y1)` to `(x2, y2)`.
 - **Status**: `PHYSICALLY VERIFIED`
@@ -78,7 +83,12 @@ Status Vocabulary:
 - **Description**: Sends key code events (`KEYCODE_HOME`, `KEYCODE_BACK`, `KEYCODE_ENTER`, etc.).
 - **Status**: `PHYSICALLY VERIFIED`
 
-### Wait & WaitForElement
+### Toast Notification
+- **MCP Tool**: `Notification`
+- **Description**: Displays custom toast notification message on Android screen.
+- **Status**: `PHYSICALLY VERIFIED`
+
+### Execution Pause & Element Polling
 - **MCP Tools**: `Wait`, `WaitForElement`
 - **Description**: Pauses execution or polls UI hierarchy until a target selector appears.
 - **Status**: `PHYSICALLY VERIFIED`
@@ -118,19 +128,20 @@ Status Vocabulary:
 
 ---
 
-## 5. System Subsystems
+## 5. System Subsystems & CLI Flags
 
 ### Managed Platform-Tools (`adb`)
-- **CLI Commands**: `android-mcp platform-tools [status|update]`
+- **CLI Commands**: `android-mcp platform-tools [status|update|reinstall]`
 - **Description**: Self-contained Platform-Tools manager under `~/.android-mcp/platform-tools/` downloading official Google releases with Zip Slip protection.
 - **Status**: `PHYSICALLY VERIFIED`
 
 ### Managed `scrcpy` Live Screen Mirror
 - **CLI Commands**: `android-mcp scrcpy [status|update|start|stop|capabilities|profile]`
+- **CLI Flags**: `--quiet`, `--no-always-on-top`, `--no-scrcpy`, `--no-scrcpy-relaunch`, `--debug`
 - **Description**: Self-contained display mirroring engine under `~/.android-mcp/scrcpy/` with **always-on-top** display mode (`--always-on-top`), **single-instance invariant** (max 1 window), adaptive platform-optimized profile resolution (Metal on macOS, H.265/H.264), and automatic tool-call relaunching (`EnsureLiveView`).
 - **Status**: `PHYSICALLY VERIFIED`
 
 ### Machine-Readable Skills Manifests
 - **CLI Commands**: `android-mcp skills [list|install]`
-- **Description**: Manages 10 domain capability manifests under `~/.android-mcp/skills/`.
+- **Description**: Manages 10 domain capability manifests under `~/.android-mcp/skills/` (synced to `~/.android-mcp/skills/`).
 - **Status**: `PHYSICALLY VERIFIED`

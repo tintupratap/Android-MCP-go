@@ -3,16 +3,16 @@
   "skills": [
     {
       "id": "file_push",
-      "name": "Push File",
+      "name": "Push Host File to Android",
       "mcp_tools": ["file_push"],
-      "status": "IMPLEMENTED",
+      "status": "PHYSICALLY VERIFIED",
       "requires_device": true
     },
     {
       "id": "file_pull",
-      "name": "Pull File",
+      "name": "Pull Android File to Host",
       "mcp_tools": ["file_pull"],
-      "status": "IMPLEMENTED",
+      "status": "PHYSICALLY VERIFIED",
       "requires_device": true
     }
   ]

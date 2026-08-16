@@ -3,9 +3,9 @@
   "skills": [
     {
       "id": "shell_exec",
-      "name": "Execute Shell Command",
+      "name": "Execute ADB Shell Command",
       "mcp_tools": ["shell_exec"],
-      "status": "IMPLEMENTED",
+      "status": "PHYSICALLY VERIFIED",
       "requires_device": true
     }
   ]

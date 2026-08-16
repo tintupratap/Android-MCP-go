@@ -2,10 +2,10 @@
   "domain": "automation",
   "skills": [
     {
-      "id": "workflow_execution",
-      "name": "Workflow Execution Engine",
+      "id": "e2e_suite_execution",
+      "name": "27-Tool Automated Physical E2E Test Suite",
       "mcp_tools": [],
-      "status": "PLANNED",
+      "status": "PHYSICALLY VERIFIED",
       "requires_device": true
     }
   ]

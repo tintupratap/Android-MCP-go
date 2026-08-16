@@ -16,6 +16,13 @@
       "requires_device": false
     },
     {
+      "id": "device_metadata",
+      "name": "Query Device Metadata & Status",
+      "mcp_tools": ["Device"],
+      "status": "PHYSICALLY VERIFIED",
+      "requires_device": false
+    },
+    {
       "id": "wireless_bootstrap",
       "name": "Automatic USB to WiFi Bootstrap",
       "mcp_tools": [],

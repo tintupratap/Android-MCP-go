@@ -3,7 +3,7 @@
   "skills": [
     {
       "id": "ui_snapshot",
-      "name": "UI Layout Snapshot",
+      "name": "UI Layout Snapshot (XML & Vision)",
       "mcp_tools": ["Snapshot", "ui_snapshot"],
       "status": "PHYSICALLY VERIFIED",
       "requires_device": true
@@ -11,16 +11,23 @@
     {
       "id": "click_by_selector",
       "name": "Click By Selector",
-      "mcp_tools": ["ClickBySelector", "ui_click_selector"],
+      "mcp_tools": ["ClickBySelector"],
       "status": "PHYSICALLY VERIFIED",
       "requires_device": true
     },
     {
       "id": "wait_for_element",
-      "name": "Wait For Element",
-      "mcp_tools": ["WaitForElement", "ui_wait_element"],
-      "status": "TESTED",
+      "name": "Wait For Element Selector",
+      "mcp_tools": ["WaitForElement"],
+      "status": "PHYSICALLY VERIFIED",
       "requires_device": true
+    },
+    {
+      "id": "wait",
+      "name": "Pause Execution Timer",
+      "mcp_tools": ["Wait"],
+      "status": "PHYSICALLY VERIFIED",
+      "requires_device": false
     }
   ]
 }

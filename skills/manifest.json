@@ -1,16 +1,16 @@
 {
   "name": "Android-MCP-go",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Production-grade Go implementation of the Model Context Protocol server for Android operating systems",
   "domains": [
-    { "id": "device", "file": "skills/device.json", "description": "Device management, discovery, and wireless bootstrap" },
-    { "id": "ui", "file": "skills/ui.json", "description": "UI hierarchy parsing, selectors, and element interaction" },
+    { "id": "device", "file": "skills/device.json", "description": "Device management, discovery, metadata, and wireless bootstrap" },
+    { "id": "ui", "file": "skills/ui.json", "description": "UI hierarchy parsing, selectors, element interaction, and polling" },
     { "id": "screenshot", "file": "skills/screenshot.json", "description": "Screen capture and visual annotations" },
-    { "id": "input", "file": "skills/input.json", "description": "Touch gestures, text typing, and key events" },
+    { "id": "input", "file": "skills/input.json", "description": "Touch gestures, multi-touch pinch zoom, text typing, key events, and notifications" },
     { "id": "applications", "file": "skills/applications.json", "description": "Package listing, application launching, stopping, and package info" },
     { "id": "filesystem", "file": "skills/filesystem.json", "description": "Android file push, pull, directory listing, and removal" },
     { "id": "shell", "file": "skills/shell.json", "description": "ADB shell execution with context timeouts" },
-    { "id": "automation", "file": "skills/automation.json", "description": "Workflow execution and verification assertions" },
+    { "id": "automation", "file": "skills/automation.json", "description": "Automated E2E physical test suite and verification assertions" },
     { "id": "scrcpy", "file": "skills/scrcpy.json", "description": "Managed scrcpy display mirroring and process management" },
     { "id": "platform_tools", "file": "skills/platform_tools.json", "description": "Self-contained Android SDK Platform-Tools management" }
   ]
