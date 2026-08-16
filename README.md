@@ -14,9 +14,9 @@ It empowers AI assistants (**Claude Desktop**, **Cursor IDE**, **Windsurf**, **A
 
 ## ⚡ Installation Methods
 
-### Option 1: 1-Line Automated Installer (Recommended)
+### Option 1: 1-Line Automated Installer (Downloads Prebuilt Release)
 
-Install `android-mcp` automatically on **macOS** or **Linux** with a single command:
+Automatically downloads the official prebuilt binary release from [GitHub Releases](https://github.com/tintupratap/Android-MCP-go/releases) on **macOS** or **Linux**:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/tintupratap/Android-MCP-go/main/install.sh | bash
