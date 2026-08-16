@@ -62,6 +62,9 @@ go vet ./...
 
 # 7. Run physical hardware E2E test suite (requires connected Android device)
 python3 e2e_test.py
+
+# 8. Build multi-platform release distribution archives & checksums for GitHub Releases
+./build_releases.sh v0.5.0
 ```
 
 See [docs/TESTING_REPORT.md](docs/TESTING_REPORT.md) for physical testing specifications and benchmarks on Sony Xperia `SOG09` hardware.
