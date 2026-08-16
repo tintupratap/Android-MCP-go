@@ -9,11 +9,17 @@
 *.so
 *.dylib
 
+# Java / Android DEX Build Outputs
+build/
+*.class
+classes.dex
+*.dex
+!internal/adb/mcp-helper.dex
+
 # Build & Temporary Files
 .tmp/
 .tmp_*
 dist/
-build/out/
 *.bak
 *.tmp
 *.log
