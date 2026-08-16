@@ -20,19 +20,19 @@ RED="\033[31m"
 RESET="\033[0m"
 
 log() {
-    printf "${CYAN}${BOLD}[Android-MCP]${RESET} %s\n" "$1"
+    printf "\033[36m\033[1m[Android-MCP]\033[0m %s\n" "$1"
 }
 
 success() {
-    printf "${GREEN}${BOLD}✓ %s${RESET}\n" "$1"
+    printf "\033[32m\033[1m✓ %s\033[0m\n" "$1"
 }
 
 warn() {
-    printf "${YELLOW}${BOLD}⚠️  %s${RESET}\n" "$1"
+    printf "\033[33m\033[1m⚠️  %s\033[0m\n" "$1"
 }
 
 error() {
-    printf "${RED}${BOLD}❌ %s${RESET}\n" "$1"
+    printf "\033[31m\033[1m❌ %s\033[0m\n" "$1"
 }
 
 log "Starting Android-MCP-go Installation..."
