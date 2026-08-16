@@ -171,6 +171,17 @@ func (s *Server) registerTools() {
 		},
 		Annotations: &ToolAnnotations{Title: "Connect Device"},
 	}, connectDevHandler)
+	s.registerTool(Tool{
+		Name:        "device_connect",
+		Description: "Connect to an ADB device by serial number (alias)",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"serial": map[string]interface{}{"type": "string"},
+			},
+		},
+		Annotations: &ToolAnnotations{Title: "Device Connect"},
+	}, connectDevHandler)
 
 	// 3. Device
 	s.registerTool(Tool{

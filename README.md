@@ -4,7 +4,7 @@
 [![CI Status](https://github.com/tintupratap/Android-MCP-go/actions/workflows/ci.yml/badge.svg)](https://github.com/tintupratap/Android-MCP-go/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Author](https://img.shields.io/badge/Author-Ranapratap-blue.svg)](mailto:tintupratap@gmail.com)
-[![Tools: 25](https://img.shields.io/badge/MCP%20Tools-25%20Registered-brightgreen.svg)](#-supported-mcp-tools--capabilities)
+[![Tools: 27](https://img.shields.io/badge/MCP%20Tools-27%20Registered-brightgreen.svg)](#-supported-mcp-tools--capabilities)
 
 **Android-MCP-go** is a high-performance, 100% self-contained Go server implementing the Model Context Protocol (MCP) for Android devices.
 
@@ -157,7 +157,7 @@ android-mcp scrcpy stop
 
 ---
 
-## 🛠️ Supported MCP Tools & Capabilities (25 Tools & Aliases)
+## 🛠️ Supported MCP Tools & Capabilities (27 Tools & Aliases)
 
 | Tool Name | Aliases | Description | Read-Only |
 |---|---|---|---|

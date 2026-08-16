@@ -34,7 +34,7 @@
 | **Unit Test Suite** | 15 Internal Packages | `go test ./...` | **100% PASS** | 15/15 Packages | 2026-08-15 20:45:45 |
 | **Data Race Detector** | Concurrency Safety | `go test -race ./...` | **100% PASS** | 0 Data Races | 2026-08-15 20:45:45 |
 | **Environment Isolation** | Strict Managed ADB Path | `TestEnvironmentIsolation` | **100% PASS** | 0 Host Leakage | 2026-08-15 20:45:45 |
-| **Physical E2E Suite** | Sony SOG09 Target | `python3 -u e2e_test.py` | **100% PASS** | 25/25 MCP Tools & Aliases | 2026-08-15 20:46:46 |
+| **Physical E2E Suite** | Sony SOG09 Target | `python3 -u e2e_test.py` | **100% PASS** | 27/27 MCP Tools & Aliases | 2026-08-15 20:46:46 |
 | **Live Display Mirror** | Asynchronous Child Process | `android-mcp scrcpy start` | **100% PASS** | Active Window | 2026-08-15 20:45:30 |
 | **One-Line Installer** | Clean Machine Setup | `install.sh` | **100% PASS** | Automatic Setup | Verified |
 
