@@ -85,46 +85,71 @@ fi
 BINARY_TARGET="${INSTALL_DIR}/android-mcp"
 INSTALLED=0
 
-# 3. Resolve Release Version (Supports Pre-releases & Stable Releases)
+# 3. Resolve Release Tag (Supports Pre-releases, Releases, and Git Tags)
 if [ -n "$VERSION" ]; then
     TAG="$VERSION"
 else
     log "Querying latest release/pre-release tag from GitHub..."
     TAG=$(curl -fsSL -H "User-Agent: Android-MCP-Installer" "https://api.github.com/repos/tintupratap/Android-MCP-go/releases" 2>/dev/null | grep -o '"tag_name": *"[^"]*"' | head -n 1 | cut -d'"' -f4 || true)
-fi
+    
+    if [ -z "$TAG" ]; then
+        TAG=$(curl -fsSL -H "User-Agent: Android-MCP-Installer" "https://api.github.com/repos/tintupratap/Android-MCP-go/tags" 2>/dev/null | grep -o '"name": *"[^"]*"' | head -n 1 | cut -d'"' -f4 || true)
+    fi
 
-if [ -n "$TAG" ]; then
-    log "Targeting GitHub Release Tag: ${BOLD}${TAG}${RESET}"
-    RELEASE_URL="https://github.com/tintupratap/Android-MCP-go/releases/download/${TAG}/android-mcp-${OS}-${ARCH}"
-    TAR_URL="https://github.com/tintupratap/Android-MCP-go/releases/download/${TAG}/android-mcp-${TAG}-${OS}-${ARCH}.tar.gz"
-else
-    log "Downloading latest prebuilt release from GitHub Releases (https://github.com/tintupratap/Android-MCP-go/releases)..."
-    RELEASE_URL="https://github.com/tintupratap/Android-MCP-go/releases/latest/download/android-mcp-${OS}-${ARCH}"
-    TAR_URL="https://github.com/tintupratap/Android-MCP-go/releases/latest/download/android-mcp-${OS}-${ARCH}.tar.gz"
+    if [ -z "$TAG" ]; then
+        TAG=$(curl -fsSL "https://github.com/tintupratap/Android-MCP-go/releases" 2>/dev/null | grep -o '/tintupratap/Android-MCP-go/releases/tag/[^"]*' | head -n 1 | cut -d'/' -f6 || true)
+    fi
 fi
 
 TMP_BIN="$(mktemp)"
 trap 'rm -f "$TMP_BIN"' EXIT
 
-if curl -cL --fail --silent --show-error "$RELEASE_URL" -o "$TMP_BIN" 2>/dev/null; then
-    chmod +x "$TMP_BIN"
-    mv "$TMP_BIN" "$BINARY_TARGET"
-    INSTALLED=1
-    success "Downloaded prebuilt release binary from GitHub Releases!"
-else
-    warn "Direct release binary download failed. Attempting release tarball extraction..."
-    TMP_DIR="$(mktemp -d)"
-    trap 'rm -rf "$TMP_DIR"' EXIT
+if [ -n "$TAG" ]; then
+    log "Targeting GitHub Release Tag: ${BOLD}${TAG}${RESET}"
     
-    if curl -cL --fail --silent "$TAR_URL" -o "$TMP_DIR/archive.tar.gz" 2>/dev/null; then
-        tar -xzf "$TMP_DIR/archive.tar.gz" -C "$TMP_DIR"
-        EXTRACTED_BIN="$(find "$TMP_DIR" -type f -name "android-mcp" | head -n 1)"
-        if [ -f "$EXTRACTED_BIN" ]; then
-            chmod +x "$EXTRACTED_BIN"
-            mv "$EXTRACTED_BIN" "$BINARY_TARGET"
-            INSTALLED=1
-            success "Extracted prebuilt release binary from tarball!"
-        fi
+    # Try downloading standalone binary asset for resolved tag
+    RELEASE_URL="https://github.com/tintupratap/Android-MCP-go/releases/download/${TAG}/android-mcp-${OS}-${ARCH}"
+    if curl -cL --fail --silent --show-error "$RELEASE_URL" -o "$TMP_BIN" 2>/dev/null; then
+        chmod +x "$TMP_BIN"
+        mv "$TMP_BIN" "$BINARY_TARGET"
+        INSTALLED=1
+        success "Downloaded prebuilt release binary (${TAG}) from GitHub Releases!"
+    else
+        warn "Direct release binary download failed for ${TAG}. Attempting release tarball extraction..."
+        TMP_DIR="$(mktemp -d)"
+        trap 'rm -rf "$TMP_DIR"' EXIT
+
+        # Try downloading release tarball archive for resolved tag
+        TAR_URLS=(
+            "https://github.com/tintupratap/Android-MCP-go/releases/download/${TAG}/android-mcp-${TAG}-${OS}-${ARCH}.tar.gz"
+            "https://github.com/tintupratap/Android-MCP-go/releases/download/${TAG}/android-mcp-v0.5.0-${OS}-${ARCH}.tar.gz"
+        )
+
+        for TAR_URL in "${TAR_URLS[@]}"; do
+            if curl -cL --fail --silent "$TAR_URL" -o "$TMP_DIR/archive.tar.gz" 2>/dev/null; then
+                tar -xzf "$TMP_DIR/archive.tar.gz" -C "$TMP_DIR"
+                EXTRACTED_BIN="$(find "$TMP_DIR" -type f -name "android-mcp" | head -n 1)"
+                if [ -f "$EXTRACTED_BIN" ]; then
+                    chmod +x "$EXTRACTED_BIN"
+                    mv "$EXTRACTED_BIN" "$BINARY_TARGET"
+                    INSTALLED=1
+                    success "Extracted prebuilt release binary from tarball archive!"
+                    break
+                fi
+            fi
+        done
+    fi
+fi
+
+# Fallback download attempt via releases/latest endpoint if tag resolution failed
+if [ "$INSTALLED" -eq 0 ]; then
+    log "Attempting fallback download from GitHub Releases latest endpoint..."
+    LATEST_URL="https://github.com/tintupratap/Android-MCP-go/releases/latest/download/android-mcp-${OS}-${ARCH}"
+    if curl -cL --fail --silent --show-error "$LATEST_URL" -o "$TMP_BIN" 2>/dev/null; then
+        chmod +x "$TMP_BIN"
+        mv "$TMP_BIN" "$BINARY_TARGET"
+        INSTALLED=1
+        success "Downloaded prebuilt release binary from GitHub Releases latest!"
     fi
 fi
 
@@ -137,7 +162,7 @@ if [ "$INSTALLED" -eq 0 ]; then
 
         if git clone --depth 1 https://github.com/tintupratap/Android-MCP-go.git "$TMP_REPO/repo" 2>/dev/null; then
             cd "$TMP_REPO/repo"
-            go build -o "$BINARY_TARGET" ./cmd/android-mcp
+            go build -ldflags="-s -w -X main.Version=0.5.0" -o "$BINARY_TARGET" ./cmd/android-mcp
             chmod +x "$BINARY_TARGET"
             INSTALLED=1
             success "Built and installed binary from source!"

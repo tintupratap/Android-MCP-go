@@ -48,7 +48,7 @@ if ($UserPath -notlike "*$InstallDir*") {
     Write-HostColor "Added $InstallDir to User PATH" "Yellow"
 }
 
-# 4. Resolve Version (Supports Pre-releases & Stable Releases)
+# 4. Resolve Release Tag (Supports Pre-releases, Releases, and Git Tags)
 if ($env:VERSION) {
     $TargetVer = $env:VERSION
 } else {
@@ -58,8 +58,15 @@ if ($env:VERSION) {
         if ($ReleasesJson -and $ReleasesJson.Count -gt 0) {
             $TargetVer = $ReleasesJson[0].tag_name
         }
-    } catch {
-        # Fallback to latest endpoint
+    } catch {}
+
+    if (-not $TargetVer) {
+        try {
+            $TagsJson = Invoke-RestMethod -Uri "https://api.github.com/repos/tintupratap/Android-MCP-go/tags" -Headers @{"User-Agent"="Android-MCP-Installer"} -ErrorAction Stop
+            if ($TagsJson -and $TagsJson.Count -gt 0) {
+                $TargetVer = $TagsJson[0].name
+            }
+        } catch {}
     }
 }
 
@@ -91,9 +98,7 @@ try {
             $Installed = $true
             Write-HostColor "✓ Extracted prebuilt release binary from zip archive!" "Green"
         }
-    } catch {
-        # Zip download failed
-    } finally {
+    } catch {} finally {
         Remove-Item -Path $TempZip -ErrorAction SilentlyContinue
         Remove-Item -Path $TempExtract -Recurse -ErrorAction SilentlyContinue
     }
@@ -109,13 +114,11 @@ if (-not $Installed) {
         try {
             git clone --depth 1 https://github.com/tintupratap/Android-MCP-go.git $TempRepo
             Push-Location $TempRepo
-            go build -o $BinaryTarget ./cmd/android-mcp
+            go build -ldflags="-s -w -X main.Version=0.5.0" -o $BinaryTarget ./cmd/android-mcp
             Pop-Location
             $Installed = $true
             Write-HostColor "✓ Built and installed binary from source!" "Green"
-        } catch {
-            # Build failed
-        } finally {
+        } catch {} finally {
             Remove-Item -Path $TempRepo -Recurse -ErrorAction SilentlyContinue
         }
     }
