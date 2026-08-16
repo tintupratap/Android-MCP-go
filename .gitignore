@@ -23,6 +23,7 @@ dist/
 *.bak
 *.tmp
 *.log
+L
 
 # Python Cache & E2E Test Artifacts
 __pycache__/
