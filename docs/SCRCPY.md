@@ -29,6 +29,8 @@
 
 - **Child Process Execution**: Spawned asynchronously via Go's `exec.Command` with `ADB=~/.android-mcp/platform-tools/adb` passed in `cmd.Env`.
 - **Targeting**: Explicitly targets the resolved device serial (`scrcpy -s <serial> --window-title "Android-MCP — <model> (<serial>)"`).
+- **Window Flags**: Includes `--always-on-top` by default so the mirror window stays visible. Use `--no-always-on-top` CLI flag to launch standard window mode.
+- **Disabling Live View**: Use `--no-scrcpy` CLI flag to disable display mirror startup entirely.
 - **Duplicate Protection**: Thread-safe process table prevents spawning multiple windows per serial on repeated tool calls.
 - **Clean Exit**: Terminating `android-mcp` sends `SIGTERM` to active `scrcpy` processes, preventing orphan/zombie GUI windows.
 

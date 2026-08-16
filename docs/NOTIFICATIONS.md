@@ -22,6 +22,7 @@
   - USB $\to$ WiFi ADB bootstrap completion (`USB can be disconnected`).
   - Connection error alerts.
 - **Debug Mode (`--debug`)**: Emits real-time alerts for AI-agent actions (`AI: Clicked Element`, `AI: Launched App`, `AI: Captured Screenshot`).
+- **Quiet Mode (`--quiet` / `ANDROID_MCP_QUIET=true`)**: Completely disables all desktop notifications using `notification.NewNoopNotifier()`.
 - **Rate Limiting**: Async alert queue rate-limits alerts (default 250ms interval) to eliminate desktop notification spam.
 
 ---
